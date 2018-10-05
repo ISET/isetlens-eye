@@ -59,28 +59,12 @@ for ii = 1:length(pupilSizes)
     ieAddObject(oi);
     oiWindow;
     
-    % Crop the image so we only have the slanted line visible. The ISO12233
-    % routine will be confused by the edges of the retinal image if we don't
-    % first crop it.
-    cropRadius = myScene.resolution/(2*sqrt(2))-5;
-    oiCenter = myScene.resolution/2;
-    barOI = oiCrop(oi,round([oiCenter-cropRadius oiCenter-cropRadius ...
-        cropRadius*2 cropRadius*2]));
-    
-    % Convert to illuminance
-    barOI = oiSet(barOI,'mean illuminance',1);
-    barIllum = oiGet(barOI,'illuminance');
-    
-    % Calculate MTF
-    deltaX_mm = oiGet(barOI,'sample spacing')*10^3; % Get pixel pitch
-    [results, fitme, esf, h] = ISO12233(barIllum, deltaX_mm(1),[1/3 1/3 1/3],'none');
-    
-    % Convert to cycles per degree
-    mmPerDeg = 0.2852; % (assuming a small FOV)
+    % Calculate MTF (polychromatic)
+    [freq,mtf] = calculateMTFfromSlantedBar(oi,'cropFlag',true);
     
     % Plot
     figure(MTFfig); hold on;
-    plot(results.freq*mmPerDeg,results.mtf,...
+    plot(freq,mtf,...
         'color',pupil2color(pupilSizes(ii)));       
 end
 

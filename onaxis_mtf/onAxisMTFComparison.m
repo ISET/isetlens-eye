@@ -72,29 +72,15 @@ load(slantedBar3mm_fn);
 
 oi = oiSet(oi,'bitDepth',32); 
 
-% Crop oi to get rid of borders, which would confuse ISO12233
-cropRadius = myScene.resolution/(2*sqrt(2))-5;
-oiCenter = myScene.resolution/2;
-barOI = oiCrop(oi,round([oiCenter-cropRadius oiCenter-cropRadius ...
-    cropRadius*2 cropRadius*2]));
-
-% Check the cropped optical image
-ieAddObject(barOI);
+% Check optical image
+ieAddObject(oi);
 oiWindow;
 
-% Convert to optical image to an illuminance image
-barOI = oiSet(barOI,'mean illuminance',1);
-barImage = oiGet(barOI,'illuminance');
-
-% Calculate MTF
-deltaX_mm = oiGet(oi,'sample spacing')*10^3; % Get pixel pitch
-[results, fitme, esf, h] = ISO12233(barImage, deltaX_mm(1),[1/3 1/3 1/3],'none');
-
-% Convert to cycles per degree
-mmPerDeg = 0.2852; % Approximate (assuming a small FOV and an focal length of 16.32 mm)
+% Calculate MTF (polychromatic)
+[freq,mtf] = calculateMTFfromSlantedBar(oi,'cropFlag',true);
 
 figure(MTFfig); hold on;
-h3 = plot(results.freq*mmPerDeg,results.mtf,'color',lineColor(3,:));
+h3 = plot(freq,mtf,'color',lineColor(3,:));
 
 %% Load Zemax data
 % The Zemax data has been saved out as a text file. We read in the text
