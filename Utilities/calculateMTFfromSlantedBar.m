@@ -52,69 +52,6 @@ else
     barOI = oi;
 end
 
-%% DEBUG
-%{
-%%% VER 1
-
-res = oiGet(oi,'rows');
-cropRadius = res/(2*sqrt(2))-5;
-oiCenter = res/2;
-barOI = oiCrop(oi,round([oiCenter-cropRadius oiCenter-cropRadius ...
-    cropRadius*2 cropRadius*2]));
-
-barOI = oiSet(barOI,'mean illuminance',1);
-barImage1 = oiGet(barOI,'illuminance');
-deltaX_mm = oiGet(barOI,'sample spacing')*10^3; % Get pixel pitch
-[results, ~, ~, ~] = ISO12233(barImage1, deltaX_mm(1),[1/3 1/3 1/3],'none');
-mmPerDeg = 0.2852; % Approximate (assuming a small FOV and an focal length of 16.32 mm)
-freq = results.freq*mmPerDeg;
-mtf = results.mtf;
-figure(10); hold on;
-plot(freq,mtf,'b');
-
-ieAddObject(barOI);
-oiWindow;
-
-%%% VER 2
-
-clear results
-clear freq
-clear mtf
-
-res = oiGet(oi,'rows');
-cropRadius = res/(2*sqrt(2))-5;
-oiCenter = res/2;
-barOI = oiCrop(oi,round([oiCenter-cropRadius oiCenter-cropRadius ...
-    cropRadius*2 cropRadius*2]));
-
-% Zero out all wavelengths aside from the ones we're interested in.
-targetWavelength = 400;
-diff = barOI.spectrum.wave-targetWavelength;
-[~,closestIndex] = min(abs(diff));
-closestWavelength = barOI.spectrum.wave(closestIndex);
-
-badI = (barOI.spectrum.wave ~= closestWavelength);
-[n,m,w] = size(barOI.data.photons);
-barOI.data.photons(:,:,badI) = zeros(n,m,w-1);
-
-% Illuminance needs to be recalculated (important!)
-barOI = oiSet(barOI, 'illuminance', []);
-barOI = oiAdjustIlluminance(barOI,1);
-barOI = oiSet(barOI,'mean illuminance',1);
-barImage2 = oiGet(barOI,'illuminance');
-
-deltaX_mm = oiGet(barOI,'sample spacing')*10^3; % Get pixel pitch
-[results, ~, ~, ~] = ISO12233(barImage2, deltaX_mm(1),[1/3 1/3 1/3],'none');
-mmPerDeg = 0.2852; % Approximate (assuming a small FOV and an focal length of 16.32 mm)
-freq = results.freq*mmPerDeg;
-mtf = results.mtf;
-figure(10);
-plot(freq,mtf,'r');
-
-ieAddObject(barOI);
-oiWindow;
-%}
-
 %% Spectral calculations
 
 if(isempty(targetwavelength))
@@ -130,7 +67,7 @@ else
     
     % Find the closest matching sampled wavelength
     sampledWavelengths = oiGet(barOI,'wave');
-    diff = sampledWavelengths-targetWavelength;
+    diff = sampledWavelengths-targetwavelength;
     [~,closestIndex] = min(abs(diff));
     closestWavelength = sampledWavelengths(closestIndex);
     
