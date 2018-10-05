@@ -117,6 +117,8 @@ h4 = plot(data_geometric.spatial_frequency.*mmPerDeg,...
 figure(MTFfig);
 grid on;
 title(sprintf('On-Axis MTF \n (3 mm pupil, polychromatic)'))
+xlabel('Spatial Frequency (cycles/deg)');
+ylabel('Contrast Reduction (SFR)');
 set(gca, 'YScale', 'log')
 set(gca, 'XScale', 'log')
 xticks([1 2 5 10 20 50 100])
