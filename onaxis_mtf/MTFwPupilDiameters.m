@@ -87,7 +87,7 @@ end
 %% Make the plot prettier
 figure(MTFfig);
 grid on;
-title('MTF vs Pupil Diameter')
+title(sprintf('MTF vs Pupil Diameter \n (polychromatic)'))
 xlabel('Spatial Frequency (cycles/deg)');
 ylabel('Contrast Reduction (SFR)');
 set(gca, 'YScale', 'log')
