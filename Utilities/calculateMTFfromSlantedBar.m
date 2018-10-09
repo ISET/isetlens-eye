@@ -71,6 +71,12 @@ else
     [~,closestIndex] = min(abs(diff));
     closestWavelength = sampledWavelengths(closestIndex);
     
+    % Alert the user if we are approximating
+    if(closestWavelength ~= targetwavelength)
+        fprintf(['Target wavelength of %0.2f nm not sampled, '... 
+            'using %0.2f nm instead. \n'],targetwavelength,closestWavelength);
+    end
+    
     % Zero out all wavelengths aside from the ones we're interested in.
     photons = oiGet(barOI,'photons');
     removeThese = (sampledWavelengths ~= closestWavelength);
