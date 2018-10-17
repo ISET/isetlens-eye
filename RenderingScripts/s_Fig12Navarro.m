@@ -56,7 +56,7 @@ gcp.targets = [];
 %% Render a slanted bar
 
 % Scene is far away
-myScene = sceneEye('slantedBar','planeDistance',10); 
+myScene = sceneEye('slantedBar','planeDistance',1000); 
 myScene.numRays = 4096;
 myScene.pupilDiameter = 4;
 myScene.numCABands = 16;
@@ -65,33 +65,35 @@ sceneNavarro.numBounces = 1;
 % From slantedBarSanityCheck.m we have an idea of what the minimum sampling
 % rate and size our rendered optical image should be, in order to capture
 % the spread of the PSF as well as have high enough sampling.
-myScene.fov = 2;
+myScene.fov = 1;
 myScene.resolution = 800;
 
 % LQ
-myScene.resolution = 128;
-myScene.numCABands = 0;
-myScene.numRays = 128;
+% myScene.resolution = 128;
+% myScene.numCABands = 0;
+% myScene.numRays = 128;
 
 accomm = [0 0.15];
+
 for ii = 1:length(accomm)
+    
     
     myScene.accommodation = accomm(ii);
     myScene.name = sprintf('validate%0.2f',accomm(ii));
     
-%     if(ii == length(accomm))
-%         uploadFlag = true;
-%     else
-%         uploadFlag = false;
-%     end
-%     
-%     [cloudFolder,zipFileName] =  ...
-%     sendToCloud(gcp,myScene,'uploadZip',uploadFlag);
+    % Cloud rendering
+    if(ii == length(accomm))
+        uploadFlag = true;
+    else
+        uploadFlag = false;
+    end
+    [cloudFolder,zipFileName] =  ...
+    sendToCloud(gcp,myScene,'uploadZip',uploadFlag);
     
-    % Normal rendering
-    oi = myScene.render;
-    ieAddObject(oi);
-    oiWindow;
+    % Local rendering
+%     oi = myScene.render;
+%     ieAddObject(oi);
+%     oiWindow;
 
     
 end
