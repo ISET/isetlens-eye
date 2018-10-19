@@ -65,8 +65,6 @@ sbjWvf = wvfCreate;
 
 % Set the zernike coefficients
 sbjWvf = wvfSet(sbjWvf,'zcoeffs',z);    
-% sbjWvf = wvfSet(sbjWvf,'zcoeffs',z4,4);                
-% sbjWvf = wvfSet(sbjWvf,'zcoeffs',z12,12); 
 
 sbjWvf = wvfSet(sbjWvf,'measured pupil',measPupilMM);   
 sbjWvf = wvfSet(sbjWvf,'measured wavelength',measuredWls*10^3); % nm
@@ -113,7 +111,21 @@ for wls = [450 550 650]
     
 end
 
+%% Load the rendered retinal image
+load(fullfile(dataDir,'occlusion_1.00_2.00_1.00dpt.mat'));
+ieAddObject(oi); oiWindow;
 
+accom = scene3d.accommodation;
+
+%% Adjust the PSF's depending on the depths
+
+% Maybe we can infer this from the depth map, but for now let's hard code
+% it
+topDepth = 1;
+bottomDepth = 2;
+
+% I'm not sure if this is the right way to do this
+topWvf = wvfSet(sbjWvf,'zcoeffs',{'defocus',topDepth-accom});
 
 
 
