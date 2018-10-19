@@ -1,6 +1,11 @@
 function data = readZemaxMTF(filename)
 %READZEMAXPSF Parse a Zmeax MTF text file.
 
+%% Check that file exists
+if(~exist(filename,'file'))
+    error('Cannot find file.');
+end
+
 %% Create structure
 data = struct();
 
