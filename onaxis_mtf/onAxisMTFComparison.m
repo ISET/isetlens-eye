@@ -8,7 +8,7 @@
 ieInit;
 rng(1);
 
-MTFfig = figure;
+MTFfig = vcNewGraphWin;
 
 % Setup plot color
 lineColor = cbrewer('qual','Set1',4);
@@ -21,7 +21,11 @@ load(fullfile(isetlenseyeRootPath(),'onaxis_mtf','thibos','ThibosMTF.mat'));
 
 % Plot
 freq = freqAll(1,:); % These should all be the same.
-h1 = stdshade(mtfAll,0.25,lineColor(1,:),freq,[]);
+try
+    h1 = stdshade(mtfAll,0.25,lineColor(1,:),freq,[]);
+catch
+    h1 = errorbar(freq,mean(mtfAll),std(mtfAll),'color',lineColor(1,:));
+end
 
 %% Compare with Watson's model (2013)
 % Note: I can't tell how Watson calculates his "polychromatic" MTF. The
@@ -125,4 +129,4 @@ legend([h1 h2 h3 h4],...
 
 oiWindow;
 
-
+%%
