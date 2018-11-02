@@ -72,11 +72,21 @@ gcp.renderDepth = true;
 gcp.targets = [];
 
 %% Do a quick local test render first (~20 sec)
-
 %{
+topDepth = 0.5;
+bottomDepth = 2;
+
+scene3d = sceneEye('slantedBarTexture',...
+    'topDepth',topDepth,...
+    'bottomDepth',bottomDepth); % in meters
+
+% We'll keep these parameters the same for all cases
+scene3d.fov        = 2; % The smaller the fov the more the LCA is visible.
+scene3d.numBounces = 3;
+
 scene3d.numCABands = 6; % Can increase to 16 or 32 at the cost of render speed.
 
-scene3d.accommodation = 1/topDepth; % Accommodate to top plane
+scene3d.accommodation = 1/bottomDepth; % Accommodate to the back plane
 
 % Set quality parameters
 scene3d.resolution = 128; % Low quality
@@ -90,46 +100,13 @@ ieAddObject(oi);
 oiWindow;
 %}
 
-%% Setup with a pinhole camera
-
-%{
-% Automatically uses a pinhole or perspective camera (see next line)
-scene3d.debugMode = true;
-
-% If these are not zero, PBRT will use a simple perspective/thin lens model
-% instead of a pinhole.
-scene3d.accommodation = 0;
-scene3d.pupilDiameter = 0;
-
-% Because it's a pinhole, we don't have to use as many rays
-if(lqFlag)
-    scene3d.numRays = 128; % LQ
-    scene3d.resolution = 128;
-else
-    scene3d.numRays = 2048; % HQ
-    scene3d.resolution = 800;
-end
-
-scene3d.name = sprintf('occlusion_%0.2f_%0.2f_pinhole',...
-    topDepth,bottomDepth);
-
-[cloudFolder,zipFileName] =  ...
-    sendToCloud(gcp,scene3d,'uploadZip',true);
-%}
-
 %% Loop over different depths and accommodations
 
-% Note:
-% Something is wrong with the 1/topDepth, rendering gets inexplicably stuck
-% when we increase the resolution.
-% accom = 1/bottomDepth;
-
 % Render 3 plane depths
-% topPlaneDepth = [0.5 1 2.5];
-topPlaneDepth = [1.5];
+topPlaneDepth = [0.5 1 2.5];
 
 % LQ mode flag (for testing)
-lqFlag = false;
+lqFlag = true;
 
 for tp = 1:length(topPlaneDepth)
     
