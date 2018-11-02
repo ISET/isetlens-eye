@@ -33,11 +33,12 @@ ieAddObject(scene);
 sceneWindow;
 
 depthMap = sceneGet(scene,'depth map');
-figure(); axis off;
+vcNewGraphWin(); axis off;
 imagesc(depthMap); colorbar; colormap(gray);
 title('Depth Map')
 
-%% Calculate correct PSF to blur with
+%% Calculate correct PSF to blur the checkerboard
+
 % We use the Navarro PSF, to match the 3D render. To do this, we extract
 % Zernike coefficients in Zemax and then use them with the ISET3d wvf
 % tools. 
@@ -45,19 +46,15 @@ zmxData = readZemaxZernike(fullfile(isetlenseyeRootPath,...
     'occlusionBoundary','Zemax_Zernike_Navarro_4mm_550nm.txt'),...
     'returnAsANSI',true);
 
-% Ideally we read in the Zemax file and extract the appropriate values. But
-% since most of the coefficients are zero, I've just manually pulled out
-% the values for now.
-
 % The following coeffs are for a 4 mm pupil (not listed in Zemax file).
 measuredWls = zmxData.wavelength_um; % um 
 measPupilMM = 4; % mm
 
 % We multiply by the wavelength because coefficients from Zemax are in
-% units of waves. We have to convert to um (ANSI standard) for ISETbio.
-% "readZemaxZernike.m" will take care of the conversion from between Zemax
+% units of waves. We convert to um (ANSI standard) for ISETbio.
+% "readZemaxZernike.m" will take care of the conversion from Zemax
 % indices to ANSI indices.
-z = zmxData.coeffList.*measuredWls; 
+z = zmxData.coeffList .* measuredWls; 
 % (We ignore aberrations higher than ANSI index 20).
 
 % Initialize
@@ -85,7 +82,8 @@ for wls = [450 550 650]
     uData = wvfPlot(tmpWvf,'psf');
     close gcf;
     
-    % Plot cross section
+    % Plot cross section computed by ISETBio and normalized to a peak
+    % intensity of 1
     figure(); hold on;
     [m,n] = size(uData.z);
     intensity = uData.z(round(m/2),:);
@@ -127,5 +125,5 @@ bottomDepth = 2;
 % I'm not sure if this is the right way to do this
 topWvf = wvfSet(sbjWvf,'zcoeffs',{'defocus',topDepth-accom});
 
-
+%%
 
