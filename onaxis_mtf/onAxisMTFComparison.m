@@ -88,7 +88,7 @@ h3 = plot(freq,mtf,'color',lineColor(3,:));
 
 % We have data for the fft, huygens, and geometric method. We use the
 % geometric now since it's functionally the same as ray-tracing.
-data_geometric = readZemaxMTF('mtf_geometric_photopic_4mm_0dpt_cycmm.txt');
+data_geometric = readZemaxMTF('mtf_geometric_photopic_3mm_0dpt_cycmm.txt');
 
 % Thed ata is given in cyc/mm but we want cyc/deg. We convert it the same
 % way we do in the previous section. 
