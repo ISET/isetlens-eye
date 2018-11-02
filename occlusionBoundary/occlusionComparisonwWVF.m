@@ -1,4 +1,4 @@
-%% occlusionBoundaryAnalysis.m
+%% occlusionComparisonwWVF.m
 % Compare the blur at an occlusion boundary between:
 % (1) a 3D scene rendered with ISET3d and the human eye 
 % with

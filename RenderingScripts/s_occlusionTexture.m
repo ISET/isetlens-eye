@@ -7,7 +7,7 @@
 % We would like to compare the ray-traced rendering with a simpler
 % version in which we simply convolve the two images with different
 % blur functions and then add them. We will have the eye accommodate to
-% either plane. 
+% either plane.
 %
 % First we render with a pinhole to create an ISET scene. We will then use
 % this scene and it's depth map to convolve with a 2D PSF created in
@@ -15,7 +15,10 @@
 %
 % Next we will render the 3D scene with the Navarro eye model. We will
 % compare the retinal image between these two methods.
-% 
+%
+% Lastly, we render the above retinal image but with each of the planes
+% removed from the scene, so we can test the additivity of the blur.
+%
 % ISETBIO Team, 2018
 %
 % See also
@@ -29,7 +32,7 @@ if ~mcGcloudExists, mcGcloudConfig; end % check whether we can use google cloud 
 
 %% Initialize save folder
 % Since rendering these images often takes a while, we will save out the
-% optical images into a folder for later processing. 
+% optical images into a folder for later processing.
 currDate = datestr(now,'mm-dd-yy_HH_MM');
 saveDirName = sprintf('occlusionTexture_%s',currDate);
 saveDir = fullfile(isetbioRootPath,'local',saveDirName);
@@ -44,9 +47,12 @@ dockerAccount= 'tlian';
 projectid = 'renderingfrl';
 dockerImage = 'gcr.io/renderingfrl/pbrt-v3-spectral-gcloud';
 cloudBucket = 'gs://renderingfrl';
+% projectid = 'primal-surfer-140120';
+% dockerImage = 'gcr.io/primal-surfer-140120/pbrt-v2-spectral-gcloud';
+% cloudBucket = 'gs://primal-surfer-140120.appspot.com';
 
-clusterName = 'validate';
-zone         = 'us-central1-a';    
+clusterName = 'occlusion';
+zone         = 'us-central1-a';
 instanceType = 'n1-highcpu-32';
 
 gcp = gCloud('dockerAccount',dockerAccount,...
@@ -55,7 +61,8 @@ gcp = gCloud('dockerAccount',dockerAccount,...
     'cloudBucket',cloudBucket,...
     'zone',zone,...
     'instanceType',instanceType,...
-    'projectid',projectid);
+    'projectid',projectid,...
+    'maxInstances',20);
 toc
 
 % Render depth
@@ -63,24 +70,6 @@ gcp.renderDepth = true;
 
 % Clear the target operations
 gcp.targets = [];
-
-%% Create the scene
-
-% Try different depths
-% Depth to the two textured planes in meters
-topDepth = 1;
-bottomDepth = 2;
-
-scene3d = sceneEye('slantedBarTexture',...
-    'topDepth',topDepth,...
-    'bottomDepth',bottomDepth); % in meters
-
-% We'll keep these parameters the same for all cases
-scene3d.fov        = 2; % The smaller the fov the more the LCA is visible.
-scene3d.numBounces = 3; 
-
-% LQ mode flag (for testing)
-lqFlag = false;
 
 %% Do a quick local test render first (~20 sec)
 
@@ -105,11 +94,11 @@ oiWindow;
 
 %{
 % Automatically uses a pinhole or perspective camera (see next line)
-scene3d.debugMode = true; 
+scene3d.debugMode = true;
 
 % If these are not zero, PBRT will use a simple perspective/thin lens model
 % instead of a pinhole.
-scene3d.accommodation = 0; 
+scene3d.accommodation = 0;
 scene3d.pupilDiameter = 0;
 
 % Because it's a pinhole, we don't have to use as many rays
@@ -128,37 +117,136 @@ scene3d.name = sprintf('occlusion_%0.2f_%0.2f_pinhole',...
     sendToCloud(gcp,scene3d,'uploadZip',true);
 %}
 
-%% Now setup with the Navarro eye
+%% Loop over different depths and accommodations
 
-scene3d.debugMode = false; 
-scene3d.pupilDiameter = 4;
+% Note:
+% Something is wrong with the 1/topDepth, rendering gets inexplicably stuck
+% when we increase the resolution.
+% accom = 1/bottomDepth;
 
-% Because it's a pinhole, we don't have to use as many rays
-if(lqFlag)
-    scene3d.numRays = 128; % LQ
-    scene3d.resolution = 128;
-else
-    scene3d.numRays = 8192; % HQ - may need to be even higher
-    scene3d.resolution = 800;
-end
+% Render 3 plane depths
+% topPlaneDepth = [0.5 1 2.5];
+topPlaneDepth = [1.5];
 
-% Render twice, with different accommodations
-accom = [1/topDepth 1/bottomDepth]; % dpt
-for ii = 1:length(accom)
+% LQ mode flag (for testing)
+lqFlag = false;
+
+for tp = 1:length(topPlaneDepth)
     
-    scene3d.accommodation = accom(ii);
-    scene3d.name = sprintf('occlusion_%0.2f_%0.2f_%0.2fdpt',...
-        topDepth,bottomDepth,accom(ii));
+    % Try different depths
+    % Depth to the two textured planes in meters
+    topDepth = topPlaneDepth(tp);
+    bottomDepth = 2;
+    
+    scene3d = sceneEye('slantedBarTexture',...
+        'topDepth',topDepth,...
+        'bottomDepth',bottomDepth); % in meters
+    
+    % We'll keep these parameters the same for all cases
+    scene3d.fov        = 2; % The smaller the fov the more the LCA is visible.
+    scene3d.numBounces = 3;
+    
+    % Render twice, with different accommodations
+    accom = [1/topDepth 1/bottomDepth]; % dpt
 
-        % Cloud rendering
-    if(ii == length(accom))
-        uploadFlag = true;
+    %% Set LQ or HQ
+    
+    scene3d.debugMode = false;
+    scene3d.pupilDiameter = 4;
+    
+    if(lqFlag)
+        scene3d.numRays = 128; % LQ
+        scene3d.resolution = 128;
+        scene3d.numCABands = 6;
     else
-        uploadFlag = false;
+        scene3d.numRays = 4096;
+        scene3d.resolution = 512;
+        scene3d.numCABands = 16;
     end
-    [cloudFolder,zipFileName] =  ...
-    sendToCloud(gcp,scene3d,'uploadZip',uploadFlag);
-
+    
+    %% Change light source
+    
+    oldString = '"infinite"';
+    newString = '"distant" "point from" [0 0 0] "point to" [0 0 100]';
+    scene3d.recipe = piWorldFindAndReplace(scene3d.recipe,oldString,newString);
+    
+    oldString = '"integer nsamples" [8]';
+    newString = '';
+    scene3d.recipe = piWorldFindAndReplace(scene3d.recipe,oldString,newString);
+    
+    %% Both planes together
+    
+    for ii = 1:length(accom)
+        
+        scene3d.accommodation = accom(ii);
+        scene3d.name = sprintf('occlusion_%0.2f_%0.2f_%0.2fdpt',...
+            topDepth,bottomDepth,accom(ii));
+        
+        % Cloud rendering
+        if(ii == length(accom))
+            uploadFlag = true;
+        else
+            uploadFlag = false;
+        end
+        [cloudFolder,zipFileName] =  ...
+            sendToCloud(gcp,scene3d,'uploadZip',uploadFlag);
+        
+    end
+    
+    %% Remove each plane and re-render
+    
+    uploadFlag = false;
+    for ii = 1:length(accom)
+        
+        scene3d.accommodation = accom(ii);
+        
+        % --------------------
+        % Find top plane index
+        for jj = 1:length(scene3d.recipe.assets)
+            if strcmp(scene3d.recipe.assets(jj).name,'TopPlane')
+                topPlaneI = jj;
+            end
+        end
+        
+        % Remove Top plane
+        assert(strcmp(scene3d.recipe.assets(topPlaneI).name,'TopPlane'));
+        topPlaneAsset = scene3d.recipe.assets(topPlaneI);
+        scene3d.recipe.assets(topPlaneI) = [];
+        scene3d.name = sprintf('occlusion_%0.2f_%0.2f_%0.2fdpt_Bottom',...
+            topDepth,bottomDepth,accom(ii));
+        
+        % Push to cloud
+        sendToCloud(gcp,scene3d,'uploadZip',uploadFlag);
+        
+        % Put Top plane back
+        scene3d.recipe.assets(end+1) = topPlaneAsset;
+        
+        % --------------------
+        % Find bottom plane index
+        for jj = 1:length(scene3d.recipe.assets)
+            if strcmp(scene3d.recipe.assets(jj).name,'BottomPlane')
+                bottomPlaneI = jj;
+            end
+        end
+        
+        % Remove Bottom plane
+        assert(strcmp(scene3d.recipe.assets(bottomPlaneI).name,'BottomPlane'));
+        bottomPlaneAsset = scene3d.recipe.assets(bottomPlaneI);
+        scene3d.recipe.assets(bottomPlaneI) = [];
+        scene3d.name = sprintf('occlusion_%0.2f_%0.2f_%0.2fdpt_Top',...
+            topDepth,bottomDepth,accom(ii));
+        
+        % Push to cloud
+        if(ii == length(accom))
+            uploadFlag = true;
+        end
+        [cloudFolder,zipFileName] =  ...
+            sendToCloud(gcp,scene3d,'uploadZip',uploadFlag);
+        
+        % Put Bottom plane back
+        scene3d.recipe.assets(end+1) = bottomPlaneAsset;
+        
+    end
 end
 
 %% Render
@@ -168,7 +256,7 @@ gcp.render();
 % Save the gCloud object in case MATLAB closes
 gCloudName = sprintf('%s_gcpBackup_%s',mfilename,currDate);
 save(fullfile(saveDir,gCloudName),'gcp','saveDir');
-    
+
 % Pause for user input (wait until gCloud job is done)
 x = 'N';
 while(~strcmp(x,'Y'))
@@ -198,6 +286,6 @@ for ii=1:length(oiAll)
         save(saveFilename,'oi','scene3d');
         
     end
-  
+    
 end
 
