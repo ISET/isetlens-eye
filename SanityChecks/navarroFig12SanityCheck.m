@@ -9,17 +9,7 @@ mtfFig = figure(); clf; hold on;
 %% Fetch data
 % Prerendered data is saved on RDT. This data was generated using
 % s_Fig12Navarro.m
-dataDir = fullfile(isetlenseyeRootPath,'data',...
-    'navarroFig12Validate');
-
-if(~exist(dataDir,'dir'))
-    fprintf('Fetching data...\n');
-    piPBRTFetch('navarroFig12Validate',...
-        'remotedirectory','/resources/isetlensdata',...
-        'destinationfolder',fullfile(isetlenseyeRootPath,'data'),...
-        'delete zip', true);
-    fprintf('Data fetched! \n');
-end
+dataDir = ileFetchDir('navarroFig12Validate');
 
 %% Plot data
 % Two MTF's, one at 0 dpt accommodation and the other at 0.15 dpt. 

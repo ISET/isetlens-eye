@@ -14,16 +14,7 @@ ieInit;
 
 dirName = 'lcaExample_far'; % far data
 % dirName = 'lcaExample_close'; % close data
-dataDir = fullfile(isetlenseyeRootPath,'data',dirName);
-
-if(~exist(dataDir,'dir'))
-    fprintf('Fetching data...\n');
-    piPBRTFetch(dirName,...
-        'remotedirectory','/resources/isetlensdata',...
-        'destinationfolder',fullfile(isetlenseyeRootPath,'data'),...
-        'delete zip', true);
-    fprintf('Data fetched! \n');
-end
+datadir = ileFetchDir(dirName);
 
 if(strcmp(dirName,'lcaExample_close'))
     

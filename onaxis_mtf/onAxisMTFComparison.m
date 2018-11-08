@@ -63,15 +63,8 @@ h2 = plot(u,M_Watson,'color',lineColor(2,:));
 % The rendered data is located on the RemoteDataToolbox because it is a
 % large file. If it doesn't already exist, we download it here and put it
 % into a local data folder.
-slantedBar3mm_fn = fullfile(isetlenseyeRootPath,'data',...
-    'slantedBar_pupil','pupilDiam_3.00mm.mat');
-if(~exist(slantedBar3mm_fn,'file'))
-    fprintf('Fetching data...');
-    piPBRTFetch('slantedBar_pupil',...
-        'remotedirectory','/resources/isetlensdata',...
-        'destinationfolder',fullfile(isetlenseyeRootPath,'data'));
-    fprintf('Data fetched!');
-end
+dataDir = ileFetchDir('slantedBar_pupil');
+slantedBar3mm_fn = fullfile(dataDir,'pupilDiam_3.00mm.mat');
 load(slantedBar3mm_fn);
 
 oi = oiSet(oi,'bitDepth',32); 

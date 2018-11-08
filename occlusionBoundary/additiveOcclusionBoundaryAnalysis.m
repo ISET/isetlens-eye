@@ -16,23 +16,11 @@ ieInit;
 %% Fetch data
 % Prerendered data is saved on RDT. This data was generated using
 % s_occlusionTexture.m
-dataDir = fullfile(isetlenseyeRootPath,'data',...
-    'occlusionBoundary_512res');
-
-if(~exist(dataDir,'dir'))
-    fprintf('Fetching data...\n');
-    piPBRTFetch('occlusionBoundary_512res',...
-        'remotedirectory','/resources/isetlensdata',...
-        'destinationfolder',fullfile(isetlenseyeRootPath,'data'),...
-        'delete zip', true);
-    fprintf('Data fetched! \n');
-end
+dataDir = ileFetchDir('occlusionBoundary_512res');
 
 %% For each plane distance and accommodation load the right data set
 
-topDepthsAll = [0.5 1 2.5]; % meters
 topDepthsAll = [0.5];
-% (the last one should have been 1.5 meters, let's rerender)
 
 % The back plane is always fixed to 2 meters
 bottomDepth = 2;
