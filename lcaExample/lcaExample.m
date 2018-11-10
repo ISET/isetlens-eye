@@ -72,6 +72,7 @@ for ii = 1:length(accom)
     rectangle('Position',r_Czoom_deg,'EdgeColor','m','LineWidth',2)
     
     rectColors = {'r','g','m'};
+    
     for jj = 1:3
         
         cropRGB = oiGet(cropImages{ii,jj}.oi,'rgb');
@@ -95,73 +96,145 @@ for ii = 1:length(accom)
         rectangle('Position',r_zoom_inDeg(jj,:),...
                   'EdgeColor',rectColors{jj},...
                   'LineWidth',4)
-
+        
+        % Save the angular support for the next section
+        angSupportCropped_x{ii,jj} = curr_angSupport_x;
+        angSupportCropped_y{ii,jj} = curr_angSupport_y;
+        
     end
     
 end
 
-%{
-figure(1);
-subplot(3,4,1);
-image(x,x,rgbFocusA);
-title('Focus on "A"');
-axis image; xlabel('deg');
-rectangle('Position',r_Azoom_deg,'EdgeColor','r','LineWidth',2)
-rectangle('Position',r_Bzoom_deg,'EdgeColor','g','LineWidth',2)
-rectangle('Position',r_Czoom_deg,'EdgeColor','m','LineWidth',2)
-subplot(3,4,2);
-image(Azoom_x,Azoom_y,rgbFocusA_CropA);
-axis image; xlabel('deg');
-rectangle('Position',r_Azoom_deg,'EdgeColor','r','LineWidth',4)
-subplot(3,4,3);
-image(Bzoom_x,Bzoom_y,rgbFocusA_CropB);
-axis image; xlabel('deg');
-rectangle('Position',r_Bzoom_deg,'EdgeColor','g','LineWidth',4)
-subplot(3,4,4);
-image(Czoom_x,Czoom_y,rgbFocusA_CropC);
-axis image; xlabel('deg');
-rectangle('Position',r_Czoom_deg,'EdgeColor','m','LineWidth',4)
-
-subplot(3,4,5);
-image(x,x,rgbFocusB);
-title('Focus on "B"');
-axis image; xlabel('deg');
-rectangle('Position',r_Azoom_deg,'EdgeColor','r','LineWidth',2)
-rectangle('Position',r_Bzoom_deg,'EdgeColor','g','LineWidth',2)
-rectangle('Position',r_Czoom_deg,'EdgeColor','m','LineWidth',2)
-subplot(3,4,6);
-image(Azoom_x,Azoom_y,rgbFocusB_CropA);
-axis image; xlabel('deg');
-rectangle('Position',r_Azoom_deg,'EdgeColor','r','LineWidth',4)
-subplot(3,4,7);
-image(Bzoom_x,Bzoom_y,rgbFocusB_CropB);
-axis image; xlabel('deg');
-rectangle('Position',r_Bzoom_deg,'EdgeColor','g','LineWidth',4)
-subplot(3,4,8);
-image(Czoom_x,Czoom_y,rgbFocusB_CropC);
-axis image; xlabel('deg');
-rectangle('Position',r_Czoom_deg,'EdgeColor','m','LineWidth',4)
-
-subplot(3,4,9);
-image(x,x,rgbFocusC);
-title('Focus on "C"');
-axis image; xlabel('deg');
-rectangle('Position',r_Azoom_deg,'EdgeColor','r','LineWidth',2)
-rectangle('Position',r_Bzoom_deg,'EdgeColor','g','LineWidth',2)
-rectangle('Position',r_Czoom_deg,'EdgeColor','m','LineWidth',2)
-subplot(3,4,10);
-image(Azoom_x,Azoom_y,rgbFocusC_CropA);
-axis image; xlabel('deg');
-rectangle('Position',r_Azoom_deg,'EdgeColor','r','LineWidth',4)
-subplot(3,4,11);
-image(Bzoom_x,Bzoom_y,rgbFocusC_CropB);
-axis image; xlabel('deg');
-rectangle('Position',r_Bzoom_deg,'EdgeColor','g','LineWidth',4)
-subplot(3,4,12);
-image(Czoom_x,Czoom_y,rgbFocusC_CropC);
-axis image; xlabel('deg');
-rectangle('Position',r_Czoom_deg,'EdgeColor','m','LineWidth',4)
-%}
-
 % Increase font size
 set(findall(gcf,'-property','FontSize'),'FontSize',14)
+
+%% Plot edge of image over wavelength to show LCA more clearly
+
+lcaEdgeFig = figure();
+k = 1;
+for ii = 1:3 % over accommodation
+    for jj = 2 % the "B"
+        
+        oi = cropImages{ii,jj}.oi;
+        oi = oiSet(oi,'mean illuminance',10);
+        
+        rgb = oiGet(oi,'rgb');
+        x = angSupportCropped_x{ii,jj};
+        y = angSupportCropped_y{ii,jj};
+        
+        % Only plot the edge
+        r = [130   225   200   200];       
+        % Convert rectangle to degrees
+        [r_deg, x_edge, y_edge] = convertRectPx2Ang(r,[x; y]);
+        
+        figure(lcaEdgeFig);
+        subplot(3,2,k); k = k+1;
+        image(x,y,rgb); axis image;
+        xlabel('deg');
+        rectangle('Position',r_deg,'EdgeColor','r','LineWidth',2)
+        
+        subplot(3,2,k); k = k+1; hold on;
+        grid on;
+        oi_edge = oiCrop(oi,r);
+        photons = oiGet(oi_edge,'photons');
+        wave = oiGet(oi_edge,'wave');
+        
+        % Pick out a couple of wavelengths
+        wls = [450 500 550 600 650];
+        color = {'b','c','g','y','r'}; % Corresponding approx for color
+        for w = 1:length(wls)
+            currPhotons = photons(round(r(2)/2),:,wave == wls(w));
+            plot(x_edge,currPhotons,color{w});   
+        end
+        xlabel('Position (deg)');
+        ylabel('Irradiance (q/s/m^2/nm)')
+        axis([min(x_edge) max(x_edge) 0 12.5e14])
+        
+        % Should we put a legend for the wavelengths in?
+        
+        % Increase font size
+        set(findall(gcf,'-property','FontSize'),'FontSize',14)
+        
+        
+    end
+end
+
+
+%% Bring cropped images to the cone mosaic
+
+k = 1;
+cmfig = figure();
+for ii = 2 %1:3 % For each focus
+    for jj = 1:3 % For each letter
+        
+        currAngSupport_x = angSupportCropped_x{ii,jj};
+        currAngSupport_y = angSupportCropped_y{ii,jj};
+        
+        % Halve the image so we can see the individual cones better
+        currOI = cropImages{ii,jj}.oi;
+        sz = oiGet(currOI,'size');
+        r = [round(sz(1)/4) round(sz(2)/4) round(sz(1)/2) round(sz(2)/2)];
+        currOI = oiCrop(currOI,r);
+        currRGB = oiGet(currOI,'rgb');
+        % ieAddObject(currOI)
+        % oiWindow;
+        
+        % Also halve the angular support
+        [X, Y] = meshgrid(currAngSupport_x,currAngSupport_y);
+        X = imcrop(X,r);
+        Y = imcrop(Y,r);
+        currAngSupport_x = X(1,:);
+        currAngSupport_y = Y(:,1)';
+
+        % Right now we use the on-axis cone mosaic, but maybe we can input
+        % eccentricity somewhere?
+        
+        % Create the coneMosaic object
+        cMosaic = coneMosaic;
+        
+        % Set size of the mosaic
+        cMosaic.setSizeToFOV(oiGet(currOI, 'fov'));
+        
+        cMosaic.compute(currOI);
+        cMosaic.window;
+        
+        cmAbsorptions = cMosaic.absorptions;
+        
+        % Plot OI in figure
+        figure(cmfig); 
+        subplot(3,3,k); k = k +1;
+        image(currAngSupport_x,...
+            currAngSupport_y,...
+            currRGB);
+        axis image; xlabel('deg');
+        
+        % Plot cone mosaic in figure
+        % These lines are mostly taken from coneMosaic.plot - I haven't
+        % figured out the best way to use plot directly in a subplot. Need
+        % to ask DB/BW.
+        support = [4, 4];
+        spread = 2;
+        maxCones = 5e4;
+        nCones = size(cMosaic.coneLocs, 1);
+        locs = cMosaic.coneLocs;
+        pattern = cMosaic.pattern(:);
+        [uData.support, uData.spread, uData.delta, uData.mosaicImage] = ...
+            conePlot(locs * 1e6, pattern, support, spread);
+        subplot(3,3,k); k = k + 1;
+        imagesc(uData.mosaicImage);
+        axis off;
+        axis image;
+        
+        % Plot cone absorptions in figure
+        subplot(3,3,k); k = k + 1;
+        imagesc(cmAbsorptions); colormap(gray); colorbar;
+        title('Absorptions per integration time');
+        axis image; axis off;
+        
+        % Increase font size
+        set(findall(gcf,'-property','FontSize'),'FontSize',14)
+
+         
+    end
+end
+
