@@ -9,12 +9,14 @@ function [freq,mtf] = calculateMTFfromSlantedBar(oi,varargin)
 %        object or created in ISETBio. Borders will be cropped
 %
 % Optional inputs:
-%   'targetWavelength'  - calculate MTF for this wavelength. Otherwise we
-%                         will calculate the "polychromatic" MTF
+%   'targetWavelength'  - calculate the MTF for a specific wavelength. Otherwise we
+%                         will calculate the "polychromatic" MTF, where the
+%                         performance is weighted with the luminosity
+%                         curve.
 %   'cropFlag'          - Crop the image. When we render in PBRT, we get a
-%                         circular border due to the way we sampel the
+%                         circular border due to the way we sample the
 %                         retina. This border interferes with ISO1223, so
-%                         we crop it automatically.
+%                         we crop it automatically (default is true.)
 %
 % Outputs:
 %   freq - in cyc/deg using the small angle approximation
@@ -55,10 +57,6 @@ end
 %% Spectral calculations
 
 if(isempty(targetwavelength))
-    % TODO: How should we convert from photons over wavelength to RGB values to
-    % be passed into the ISO12233 routine?  Here we are essentically weighting
-    % the spectrum according to the luminosity function, thus producing a
-    % grayscale image to pass into ISO2233. 
     barOI = oiSet(barOI,'mean illuminance',1);
     
     barImage = oiGet(barOI,'illuminance');
@@ -89,7 +87,6 @@ else
     barOI = oiSet(barOI,'mean illuminance',1);
     
     % Get image (ISO12233 needs an 2D image)
-    % TODO: Is this the right thing to do?
     barImage = oiGet(barOI,'illuminance');
         
 end
