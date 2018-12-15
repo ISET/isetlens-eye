@@ -37,7 +37,7 @@ cloudBucket = 'gs://renderingfrl';
 % cloudBucket = 'gs://primal-surfer-140120.appspot.com';
 
 clusterName = 'validate';
-zone         = 'us-central1-a';    
+zone         = 'us-central1-a';
 instanceType = 'n1-highcpu-32';
 
 gcp = gCloud('dockerAccount',dockerAccount,...
@@ -74,38 +74,65 @@ scene3d.pupilDiameter = 4;
 if(lqFlag)
     scene3d.numRays = 128; % LQ
     scene3d.resolution = 128;
-%     scene3d.numCABands = 6; 
-
+    %     scene3d.numCABands = 6;
+    
 else
-    scene3d.numRays = 4096; 
+    scene3d.numRays = 4096;
     scene3d.resolution = 800;
-    scene3d.numCABands = 16; 
+    scene3d.numCABands = 16;
 end
+
+%% Set up crop windows
+% We crop the image to get specific, high resolution patches to run through
+% our cone mosaic.
+% These windows are used in lcaExample/lcaExample.m
+
+r_zoom(1,:) = [121   240    56    56];
+r_zoom(2,:) = [317   293    56    56];
+r_zoom(3,:) = [560   335    56    56];
+
+% We need to convert these rectangles to crop windows
+cropwindows_all = zeros(size(r_zoom));
+for ii = 1:3
+    r = r_zoom(ii,:);
+    px = [r(1) r(1)+r(3) r(2) r(2)+r(4)];
+    cropwindows_all(ii,:) = px./800;
+end
+
+% We have to increase the resolution since we're using a cropwindow
+scene3d.resolution = 8192;
 
 %% Loop through accommodations
 
 for ii = 1:length(distm)
     
-    scene3d.accommodation = 1/distm(ii); % Accommodate to the B
+    scene3d.accommodation = 1/distm(ii); % Accommodate to each letter
     
-    % Scene name
-    scene3d.name = sprintf('lettersAtDepth_%0.2fdpt',scene3d.accommodation);
-    
-    % Local
-    %{
-    [oi, ~] = scene3d.render;
-    ieAddObject(oi);
-    oiWindow;
-    %}
-    
-    % Cloud
-    if(ii == length(distm))
-        uploadFlag = true;
-    else
-        uploadFlag = false;
+    % Loop through the crop windows
+    for jj = 1:size(cropwindows_all,1)
+        
+        scene3d.recipe.set('cropwindow',cropwindows_all(jj,:));
+        
+        % Scene name
+        scene3d.name = sprintf('lettersAtDepth_%0.2fdpt_%i',...
+            scene3d.accommodation,jj);
+        
+        % Local
+%         [oi, ~] = scene3d.render;
+%         ieAddObject(oi);
+%         oiWindow;
+
+        % Cloud
+        if(ii == length(distm))
+            uploadFlag = true;
+        else
+            uploadFlag = false;
+        end
+        [cloudFolder,zipFileName] =  ...
+            sendToCloud(gcp,scene3d,'uploadZip',uploadFlag);
+        
     end
-    [cloudFolder,zipFileName] =  ...
-        sendToCloud(gcp,scene3d,'uploadZip',uploadFlag);
+
 end
 
 %% Render
@@ -115,7 +142,7 @@ gcp.render();
 % Save the gCloud object in case MATLAB closes
 gCloudName = sprintf('%s_gcpBackup_%s',mfilename,currDate);
 save(fullfile(saveDir,gCloudName),'gcp','saveDir');
-    
+
 % Pause for user input (wait until gCloud job is done)
 x = 'N';
 while(~strcmp(x,'Y'))
@@ -145,5 +172,5 @@ for ii=1:length(oiAll)
         save(saveFilename,'oi','scene3d');
         
     end
-  
+    
 end
