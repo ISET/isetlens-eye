@@ -21,10 +21,10 @@ load(fullfile(dataDir,'arizona.mat'));
 oiArizona = oi;
 xArizona = scene3d.angularSupport;
 
-% Gullstrand eye
-load(fullfile(dataDir,'gullstrand.mat'));
-oiGullstrand = oi;
-xGullstrand = scene3d.angularSupport;
+% Le Grand eye
+load(fullfile(dataDir,'LeGrand.mat'));
+oiLeGrand = oi;
+xLeGrand = scene3d.angularSupport;
 
 % Arizona eye
 load(fullfile(dataDir,'navarro.mat'));
@@ -36,7 +36,7 @@ xNavarro = scene3d.angularSupport;
 fontSize = 20;
 
 rgbArizona = oiGet(oiArizona,'rgb');
-rgbGullstrand = oiGet(oiGullstrand,'rgb');
+rgbGullstrand = oiGet(oiLeGrand,'rgb');
 rgbNavarro = oiGet(oiNavarro,'rgb');
 
 % Plot and save
@@ -50,7 +50,7 @@ xlabel('degrees','FontSize',fontSize);
 saveas(H1,fullfile(saveDir,'arizona.pdf'))
 
 H2 = figure(2); clf;
-image(xGullstrand,xGullstrand,rgbGullstrand);
+image(xLeGrand,xLeGrand,rgbGullstrand);
 axis image;
 ax = gca;
 ax.FontSize = fontSize; 
