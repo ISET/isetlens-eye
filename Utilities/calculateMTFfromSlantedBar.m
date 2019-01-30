@@ -21,6 +21,7 @@ function [freq,mtf,barImage] = calculateMTFfromSlantedBar(oi,varargin)
 % Outputs:
 %   freq - in cyc/deg using the small angle approximation
 %   mtf -  contrast reduction
+%   barImage - the RGB image used to do the ISO1223 calculation. 
 
 %% Parse inputs
 p = inputParser;

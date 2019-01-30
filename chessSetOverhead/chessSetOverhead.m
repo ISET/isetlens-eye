@@ -39,3 +39,17 @@ for ii = 1:length(wls)
     imwrite(currRGB,fullfile(outputDir,...
         sprintf('chessSetOverhead_%inm.png',wls(ii))));
 end
+
+%% Load/save the second version (with different materials)
+
+load(fullfile(dataDir,'chessSetOverhead-2.mat'));
+
+% Take a look
+ieAddObject(oi);
+oiWindow;
+
+photons = oiGet(oi,'photons');
+wave = oiGet(oi,'wave');
+
+rgb = oiGet(oi,'rgb');
+imwrite(rgb,fullfile(outputDir,'chessSetOverhead2_RGB.png'));

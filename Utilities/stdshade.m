@@ -38,7 +38,8 @@ astd = astd(~zeroI);
 if exist('alpha','var')==0 || isempty(alpha) 
     fill([F fliplr(F)],[amean+astd fliplr(amean-astd)],acolor,'linestyle','none');
     acolor='k';
-else fill([F fliplr(F)],[amean+astd fliplr(amean-astd)],acolor, 'FaceAlpha', alpha,'linestyle','none');    
+else
+    h = fill([F fliplr(F)],[amean+astd fliplr(amean-astd)],acolor, 'FaceAlpha', alpha,'linestyle','none');
 end
 
 if ishold==0
@@ -46,7 +47,7 @@ if ishold==0
 end
 
 hold on;
-h = plot(F,amean,'color',acolor,'linewidth',1.5); %% change color or linewidth to adjust mean line
+%h = plot(F,amean,'color',acolor,'linewidth',1); %% change color or linewidth to adjust mean line
 
 if check
     hold off;

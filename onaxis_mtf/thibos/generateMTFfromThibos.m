@@ -17,7 +17,7 @@ measPupilMM = 4.5; % 4.5 mm pupil size (load from Thibos data)
 R = VirtualEyes(nSbj,measPupilMM);
 
 % Do our calculations with these parameters
-calcPupilMM = 3; % 3 mm pupil size 
+calcPupilMM = 4; % 3 mm pupil size 
 wave = 450:10:650; % nm
 
 %% Loop through the subjects and calculate MTF

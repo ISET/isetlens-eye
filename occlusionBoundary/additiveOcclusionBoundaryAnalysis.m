@@ -18,6 +18,12 @@ ieInit;
 % s_occlusionTexture.m
 dataDir = ileFetchDir('occlusionBoundary_512res');
 
+% saveDir = fullfile(isetlenseyeRootPath,'outputImages','occlusion');
+saveDir = '/Users/trishalian/Google Drive/Figures/occlusions';
+if(~exist(saveDir,'dir'))
+    mkdir(saveDir);
+end
+
 %% For each plane distance and accommodation load the right data set
 
 topDepthsAll = [0.5];
@@ -43,7 +49,7 @@ for tp = 1:length(topDepthsAll)
         oiTogether = oi; % rename the oi
         
         ieAddObject(oiTogether);
-        oiWindow;
+        % oiWindow;
         
         rgbTogether = oiGet(oiTogether,'rgb');
         
@@ -54,13 +60,12 @@ for tp = 1:length(topDepthsAll)
         load(fullfile(dataDir,...
             sprintf('%s_Top.mat',basename)));
         oiTop = oi; % rename the oi
-        
        
         depthTop = oiGet(oiTop,'depth map');
-        oiTopMasked = oiTop;
+        
         
         ieAddObject(oiTop);
-        oiWindow;
+        % oiWindow;
         
         rgbTop = oiGet(oiTop,'rgb');
         
@@ -73,6 +78,7 @@ for tp = 1:length(topDepthsAll)
         rgbBottom = oiGet(oiBottom,'rgb');
         
         % Plot the depth map
+        %{
         figure();
         subplot(1,2,1);
         imagesc(depthTop,[0 3]); 
@@ -85,12 +91,13 @@ for tp = 1:length(topDepthsAll)
         colorbar; colormap(flipud(gray)); 
         title('Back Plane Depth')
         set(gcf,'Position',[1000 864 1339 474]);
+        %}
         
         % ---------------
         % Add the photons from oiTop and oiBottom together
         oiSum = oiAdd(oiTop, oiBottom, [1 1]);
         ieAddObject(oiSum);
-        oiWindow;
+        % oiWindow;
         
         rgbSum = oiGet(oiSum,'rgb');
         
@@ -100,6 +107,7 @@ for tp = 1:length(topDepthsAll)
         x = scene3d.angularSupport;
         
         % zoom in
+        %{
         r = [226   223    73    68];
         [X,Y] = meshgrid(x,x);
         X = imcrop(X,r);
@@ -107,51 +115,110 @@ for tp = 1:length(topDepthsAll)
         TL = [X(1,1) Y(1,1)];
         BR = [X(1,end)-X(1,1) Y(end,1)-Y(1,1)];
         r_deg = [TL BR];
+        %}
+        r_deg = x;
         
-        figure();
-        subplot(2,4,1);
+%         figure();
+%         subplot(4,2,1);
+        H = figure();
         image(x,x,rgbTop); hold on; axis image;
-        xlabel('deg')
-        rectangle('Position',r_deg,'EdgeColor','r','LineWidth',4)
-        title(sprintf('Plane: %0.2f m \n Accom: %0.2f dpt',topDepth, acc),...
-            'FontSize',14);
-        subplot(2,4,2);
+        xlabel('degrees')
+        ylabel('degrees')
+        %title(sprintf('Plane: %0.2f m \n Accom: %0.2f dpt',topDepth, acc),...
+        %    'FontSize',16);
+        set(findall(gcf,'-property','FontSize'),'FontSize',18)
+        saveas(H,fullfile(saveDir,...
+            sprintf('TopPlane_%0.2f_%0.2f_%0.2fdpt.png',...
+            topDepth,bottomDepth,acc)));
+        
+%         subplot(4,2,2);
+        H = figure();
         image(x,x,rgbBottom); axis image;
-        xlabel('deg')
-        rectangle('Position',r_deg,'EdgeColor','r','LineWidth',4)
-        title(sprintf('Plane: %0.2f m \n Accom: %0.2f dpt', bottomDepth, acc),...
-            'FontSize',14);
-        subplot(2,4,3);
+        xlabel('degrees')
+        ylabel('degrees')
+        % title(sprintf('Plane: %0.2f m \n Accom: %0.2f dpt', bottomDepth, acc),...
+        %   'FontSize',16);
+        set(findall(gcf,'-property','FontSize'),'FontSize',18)
+        saveas(H,fullfile(saveDir,...
+            sprintf('BottomPlane_%0.2f_%0.2f_%0.2fdpt.png',...
+            topDepth,bottomDepth,acc)));
+        
+%         subplot(4,2,3);
+        H = figure();
         image(x,x,rgbSum); axis image;
-        xlabel('deg')
-        rectangle('Position',r_deg,'EdgeColor','r','LineWidth',4)
-        title('Additive Image','FontSize',14);
-        subplot(2,4,4);
+        xlabel('degrees')
+        ylabel('degrees')
+        % title('Additive Image','FontSize',16);
+        set(findall(gcf,'-property','FontSize'),'FontSize',18)
+        saveas(H,fullfile(saveDir,...
+            sprintf('AdditiveImage_%0.2f_%0.2f_%0.2fdpt.png',...
+            topDepth,bottomDepth,acc)));
+        
+%         subplot(4,2,5);
+        H = figure();
         image(x,x,rgbTogether); axis image;
-        xlabel('deg')
-        rectangle('Position',r_deg,'EdgeColor','r','LineWidth',4)
-        title('Full Rendering','FontSize',14);
+        xlabel('degrees')
+        ylabel('degrees')
+        %title('Full Rendering','FontSize',16);
+        set(findall(gcf,'-property','FontSize'),'FontSize',18)
+        saveas(H,fullfile(saveDir,...
+            sprintf('FullRender_%0.2f_%0.2f_%0.2fdpt.png',...
+            topDepth,bottomDepth,acc)));
+        
+        % Difference image 
+        % I was going to take the photon difference here, but wasn't sure
+        % how we'd convert negative photon differences to RGB. For now i'm
+        % going to take the RGB difference and take a mean across channels.
+        %{
+        rgbDiff = abs(rgbTogether - rgbSum);
+        rgbDiff = max(rgbDiff,[],3);
+        subplot(1,5,5); 
+        imagesc(rgbDiff); colorbar; axis image; axis off;
+        title('abs(Full Rendering - Additive Image)');
+        %}
+        
+        % Try taking the absolute value of the photon difference
+        % Important that we match scales
+        oldPhotons = oiGet(oiTogether,'photons');
+        oiTogether = oiSet(oiTogether,'mean illuminance',10);
+        newPhotons = oiGet(oiTogether,'photons');
+        photonRatio = newPhotons./oldPhotons;
+        scalingFactor = mode(photonRatio(:));
+        oiSum = oiSet(oiSum,'photons',oiGet(oiSum,'photons').*scalingFactor);
+
+        photonDiff = abs(oiGet(oiTogether,'photons')-oiGet(oiSum,'photons'));
+        %subplot(4,2,7);
+        H = figure();
+        imagesc(sum(photonDiff,3)); axis image; axis off;
+        % title(sprintf('Absolute Irradiance Difference \n (summed across wavelengths)'));
+        h = colorbar; 
+        ylabel(h, 'Irradiance (q/s/m^2/nm)','FontSize',18)
+        set(findall(gcf,'-property','FontSize'),'FontSize',18)
+        saveas(H,fullfile(saveDir,...
+            sprintf('DiffImage_%0.2f_%0.2f_%0.2fdpt.png',...
+            topDepth,bottomDepth,acc)));
         
         % Zoom in
+        %{
         x = X(1,:);
         y = Y(:,1);
         subplot(2,4,5);
         image(x,y,imcrop(rgbTop,r)); axis image;
-        xlabel('deg')
+        xlabel('degrees')
         subplot(2,4,6);
         image(x,y,imcrop(rgbBottom,r)); axis image;
-        xlabel('deg')
+        xlabel('degrees')
         subplot(2,4,7);
         image(x,y,imcrop(rgbSum,r)); axis image;
-        xlabel('deg')
+        xlabel('degrees')
         subplot(2,4,8);
         image(x,y,imcrop(rgbTogether,r)); axis image;
-        xlabel('deg')
-        
+        xlabel('degrees')
         set(gcf,'Position',[673 473 1491 822]);
+        %}
         
         % Increase font size
-        set(findall(gcf,'-property','FontSize'),'FontSize',14)
+        % set(findall(gcf,'-property','FontSize'),'FontSize',16)
         
     end
     
