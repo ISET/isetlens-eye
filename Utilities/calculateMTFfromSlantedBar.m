@@ -1,4 +1,4 @@
-function [freq,mtf] = calculateMTFfromSlantedBar(oi,varargin)
+function [freq,mtf,barImage] = calculateMTFfromSlantedBar(oi,varargin)
 % Calculate the MTF given an optical image with a slanted
 %             bar. This is specifically for the eye. We use ISO1223. and
 %             provide options to calculate specific wavelength or weight
