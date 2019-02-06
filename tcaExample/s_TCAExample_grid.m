@@ -21,7 +21,7 @@ if ~mcGcloudExists, mcGcloudConfig; end % check whether we can use google cloud 
 % Since rendering these images often takes a while, we will save out the
 % optical images into a folder for later processing. 
 currDate = datestr(now,'mm-dd-yy_HH_MM');
-saveDirName = sprintf('tcaExample_ringRays_%s',currDate);
+saveDirName = sprintf('tcaExample_grid_%s',currDate);
 saveDir = fullfile(isetbioRootPath,'local',saveDirName);
 if(~exist(saveDir,'dir'))
     mkdir(saveDir);
@@ -60,7 +60,7 @@ gcp.targets = [];
 %% Setup scene
 
 % LQ mode flag (for testing)
-lqFlag = false;
+lqFlag = true;
 
 % We want a fairly large FOV to capture the effects at large
 % eccentricities.
@@ -74,7 +74,7 @@ sz = [width width];
 % Make an image of grid lines
 % (Taken from sceneGridLines.m)
 planeRes = 256;
-lineSpacing = 32;
+lineSpacing = 16;
 d = zeros(planeRes);
 d(round(lineSpacing / 2):lineSpacing:planeRes, :) = 1;
 d(:, round(lineSpacing / 2):lineSpacing:planeRes) = 1;
@@ -108,6 +108,20 @@ else
     scene3d.resolution = 800;
     scene3d.numCABands = 16;
 end
+
+%% Test render the full image
+% [oi, ~] = scene3d.render;
+% ieAddObject(oi);
+% oiWindow;
+
+%% Flatten the retina to see what happens to the grid
+
+% scene3d.retinaRadius = 1000;
+% scene3d.name = 'tcaExample-flatRetina';
+%     
+% [oi, ~] = scene3d.render;
+% ieAddObject(oi);
+% oiWindow;
 
 %% Set up crop windows
 % We crop the image to get specific, high resolution patches showing TCA.

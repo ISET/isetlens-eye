@@ -21,7 +21,13 @@ for i = 1:length(pupilSizes)
 end
 
 % Setup figure
-MTFfig = figure();
+MTFfig = vcNewGraphWin;
+
+% Setup save directory
+saveDir = fullfile(isetlenseyeRootPath,'outputImages');
+if(~exist(saveDir,'dir'))
+    mkdir(saveDir);
+end
 
 %% Load the rendered data
 % ...if not already loaded
@@ -74,17 +80,22 @@ grid on;
 title(sprintf('MTF vs Pupil Diameter \n (polychromatic)'))
 xlabel('Spatial Frequency (cycles/deg)');
 ylabel('Contrast Reduction (SFR)');
-set(gca, 'YScale', 'log')
-set(gca, 'XScale', 'log')
-xticks([1 2 5 10 20 50 100])
-yticks([0.01 0.02 0.05 0.1 0.2 0.5 1])
-axis([1 100 0.01 1])
-ax = gca;
-ax.MinorGridAlpha = 0.10;
-ax.GridAlpha = 0.10;
-
+% set(gca, 'YScale', 'log')
+% set(gca, 'XScale', 'log')
+% xticks([1 2 5 10 20 50 100])
+% yticks([0.01 0.02 0.05 0.1 0.2 0.5 1])
+% axis([1 100 0.01 1])
+% ax = gca;
+% ax.MinorGridAlpha = 0.10;
+% ax.GridAlpha = 0.10;
+axis([0 60 0 1])
 set(findall(gca,'-property','FontSize'),'FontSize',24)
 set(findall(gca,'-property','LineWidth'),'LineWidth',3)
 legend(cellstr(num2str(pupilSizes', '%0.2f mm')));
 
-%%
+set(gca,'Position',[0.1300    0.1100    0.7750    0.7827]);
+set(gcf,'Position',[0.0069    0.2044    0.6356    0.6889]);
+
+%% Save image out
+fn = fullfile(saveDir,'mtfFig_pupilDiameter.png');
+NicePlot.exportFigToPNG(fn, MTFfig, 300); 
