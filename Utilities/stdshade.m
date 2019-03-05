@@ -30,10 +30,10 @@ astd=nanstd(amatrix); % to get std shading
 
 % TL:
 % Remove zero from F
-zeroI = (F == 0);
-F = F(~zeroI);
-amean = amean(~zeroI);
-astd = astd(~zeroI);
+% zeroI = (F == 0);
+% F = F(~zeroI);
+% amean = amean(~zeroI);
+% astd = astd(~zeroI);
 
 if exist('alpha','var')==0 || isempty(alpha) 
     fill([F fliplr(F)],[amean+astd fliplr(amean-astd)],acolor,'linestyle','none');
