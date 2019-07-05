@@ -30,13 +30,13 @@ end
 saveFlag = true;
 
 % Global rays/resolution 
-globalRays = 128;
-globalRes  = 256;
+globalRays = 64;
+globalRes  = 128;
 
 % Global eye parameters
 accomm    = 1;
 pupilDiam = 4;
-caBand    = 8;
+caBands    = 8;
 fov       = 40;
 
 %% Step 1
