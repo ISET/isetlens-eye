@@ -82,8 +82,11 @@ else
     scene3d.numCABands = 16;
 end
 
-%% Try the Navarro eye model
+% Turn off transmission, we can add it in later.
+scene3d.lensDensity = 0.0;
 
+%% Try the Navarro eye model
+%{
 % This tell isetbio which model to use.
 scene3d.modelName = 'Navarro';
 
@@ -98,6 +101,21 @@ scene3d.name = 'navarro'; % The name of the optical image
 
 sendToCloud(gcp,scene3d,'uploadZip',false);
 
+%% Try Arizona eye model
+
+scene3d.modelName = 'Arizona';
+scene3d.accommodation = 0;
+
+scene3d.name = 'arizona'; % The name of the optical image
+
+% oiArizona = scene3d.render();
+% ieAddObject(oiArizona);
+% oiWindow;
+
+[cloudFolder,zipFileName] =  ...
+    sendToCloud(gcp,scene3d,'uploadZip',false);
+%}
+
 %% Try the Gullstrand-LeGrand Model
 
 % The gullstrand has no accommodation modeling. 
@@ -108,22 +126,7 @@ scene3d.name = 'LeGrand'; % The name of the optical image
 % ieAddObject(oiGullstrand);
 % oiWindow;
 
-sendToCloud(gcp,scene3d,'uploadZip',false);
-
-%% Try Arizona eye model
-
-scene3d.modelName = 'Arizona';
-scene3d.accommodation = 0;
-
-% Render!
-scene3d.name = 'arizona'; % The name of the optical image
-
-% oiArizona = scene3d.render();
-% ieAddObject(oiArizona);
-% oiWindow;
-
-[cloudFolder,zipFileName] =  ...
-    sendToCloud(gcp,scene3d,'uploadZip',true);
+sendToCloud(gcp,scene3d,'uploadZip',true);
 
 %% Render
 gcp.render();

@@ -1,0 +1,39 @@
+Ray Trace Data
+
+File : C:\Users\tlian\Documents\Zemax\SAMPLES\Navarro_Trisha_scene2retina.ZMX
+Title: 
+Date : 12/27/2018
+
+
+Units       :	 Millimeters	
+Wavelength  :	 0.650000	 µm	
+Coordinates :	 Global coordinates relative to surface	 5	
+Direction cosines are after refraction or reflection from the surface or object.
+Angles are in degrees.
+
+Normalized X Field Coord (Hx) :	     0.0000000000	
+Normalized Y Field Coord (Hy) :	     0.0000000000	
+Normalized X Pupil Coord (Px) :	     0.0000000000	
+Normalized Y Pupil Coord (Py) :	     0.5000000000	
+
+Real Ray Trace Data:
+
+Surf	       X-coordinate	       Y-coordinate	       Z-coordinate	       X-cosine	       Y-cosine	       Z-cosine	       X-normal	       Y-normal	       Z-normal	       Angle in	        Path length	 Comment	
+OBJ	            Infinity	           Infinity	           Infinity	   0.0000000000	   0.0000000000	   1.0000000000	              -              -              -              -                  - 
+  1	    0.0000000000E+00	   1.1353921095E+00	  -7.5161712817E+00	   0.0000000000	  -0.0402530966	   0.9991895157	   0.0000000000	   0.1466597019	  -0.9891870055	    8.433400687	   8.3828718285E-02	 CORNEA ANTERIOR
+  2	    0.0000000000E+00	   1.1127464415E+00	  -6.9540452338E+00	   0.0000000000	  -0.0364196650	   0.9993365839	   0.0000000000	   0.1711917602	  -0.9852377283	    7.550161907	   5.6258201179E-01	 CORNEA POSTERIOR
+  3	    0.0000000000E+00	   1.0050896825E+00	  -4.0000000000E+00	   0.0000000000	  -0.0364196650	   0.9993365839	   0.0000000000	   0.0000000000	  -1.0000000000	    2.087154665	   2.9560062959E+00	 PUPIL
+  4	    0.0000000000E+00	   1.0033005865E+00	  -3.9509081410E+00	   0.0000000000	  -0.0399337589	   0.9992023293	   0.0000000000	   0.0969055036	  -0.9952935865	    3.473848570	   4.9124448984E-02	 LENS ANTERIOR
+  5	    0.0000000000E+00	   8.4779381026E-01	  -5.9896195393E-02	   0.0000000000	  -0.0513341682	   0.9986815324	  -0.0000000000	  -0.1399091995	  -0.9901643378	   10.331236456	   3.8941181695E+00	 LENS POSTERIOR
+  6	    0.0000000000E+00	   5.8354418936E-03	   1.6319998581E+01	   0.0000000000	  -0.0686559054	   0.9976403995	  -0.0000000000	  -0.0004862868	  -0.9999998818	    2.970386688	   1.6401519649E+01	 RETINA
+
+Paraxial Ray Trace Data:
+
+Surf	       X-coordinate	       Y-coordinate	       Z-coordinate	       X-cosine	       Y-cosine	       Z-cosine	       X-normal	       Y-normal	       Z-normal	       Angle in	        Path length	 Comment	
+OBJ	            Infinity	           Infinity	           Infinity	   0.0000000000	   0.0000000000	   1.0000000000	 
+  1	    0.0000000000E+00	   1.1353921095E+00	  -7.6000000000E+00	   0.0000000000	  -0.0400167674	   0.9991990084	 CORNEA ANTERIOR
+  2	    0.0000000000E+00	   1.1133652441E+00	  -7.0500000000E+00	   0.0000000000	  -0.0362275461	   0.9993435670	 CORNEA POSTERIOR
+  3	    0.0000000000E+00	   1.0027986489E+00	  -4.0000000000E+00	   0.0000000000	  -0.0362275461	   0.9993435670	 PUPIL
+  4	    0.0000000000E+00	   1.0027986489E+00	  -4.0000000000E+00	   0.0000000000	  -0.0398154375	   0.9992070511	 LENS ANTERIOR
+  5	    0.0000000000E+00	   8.4341051209E-01	   0.0000000000E+00	   0.0000000000	  -0.0510630912	   0.9986954294	 LENS POSTERIOR
+  6	    0.0000000000E+00	   8.9722808334E-03	   1.6320000000E+01	   0.0000000000	  -0.0683103626	   0.9976641190	 RETINA

@@ -32,15 +32,17 @@ end
 %% Load the rendered data
 % ...if not already loaded
 
-slantedBar_pupilDiam_dir = fullfile(isetlenseyeRootPath,'data',...
-    'slantedBar_pupil');
-if(~exist(slantedBar_pupilDiam_dir,'dir'))
-    fprintf('Fetching data...');
-    piPBRTFetch('slantedBar_pupil',...
-        'remotedirectory','/resources/isetlensdata',...
-        'destinationfolder',fullfile(isetlenseyeRootPath,'data'));
-    fprintf('Data fetched!');
-end
+% slantedBar_pupilDiam_dir = fullfile(isetlenseyeRootPath,'data',...
+%     'slantedBar_pupil');
+% if(~exist(slantedBar_pupilDiam_dir,'dir'))
+%     fprintf('Fetching data...');
+%     piPBRTFetch('slantedBar_pupil',...
+%         'remotedirectory','/resources/isetlensdata',...
+%         'destinationfolder',fullfile(isetlenseyeRootPath,'data'));
+%     fprintf('Data fetched!');
+% end
+
+slantedBar_pupilDiam_dir = ileFetchDir('snellenBar_pupil_50m');
 
 %% Loop over pupil diameters and plot
 

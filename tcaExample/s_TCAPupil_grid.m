@@ -132,9 +132,18 @@ end
 % 4. anterior_lens
 % 5. posterior_lens
 
-% Move the pupil
-deltaPupil = [0 1.5];
-lensFilenames = cell(length(deltaPupil),1);
+% Do it two ways:
+% (1) Move the pupil away from the lens. May not be physicially accurate,
+% but might be better at showing the TCA effect 
+% (2) Change the anterior chamber depth, as is said in Austin Roorda's
+% e-mail. Might just make everything blurrier.
+
+% According to Roorda, the range in ACD is 2.93 +/- 0.36 mm
+
+% Method 1
+% ---------
+deltaPupil = [0.36 0.72];
+lensFilenames_method1 = cell(length(deltaPupil),1);
 for ii = 1:length(deltaPupil)
     
     % Shift the axial positions
@@ -150,42 +159,55 @@ for ii = 1:length(deltaPupil)
     currLensMatrix = lensMatrix;
     currLensMatrix(:,3) = currThickness;
     
-    lensFilenames{ii} = fullfile(lensDir,...
+    lensFilenames_method1{ii} = fullfile(lensDir,...
         sprintf('navarroAccommodated_%0.2f_pupilShift_%0.2f.dat',...
         scene3d.accommodation,deltaPupil(ii)));
     writeRealisticEyeLensFile(currLensMatrix,...
-        lensFilenames{ii},...
+        lensFilenames_method1{ii},...
         scene3d.accommodation)
    
 end
 
-%% Take windows along the horizontal and vertical meridian
-
-%{
-window_width_deg = 2;
-fov_max = scene3d.fov/2;
-ecc = [20 15 10 5];
-
-x = scene3d.angularSupport;
-
-for ii = 1:length(ecc)
+% Method 2
+% ---------
+% In the Navarro eye, the ACD is 3.05
+% Roorda's cited range is 2.57 to 3.29 mm
+% Should we move the lens closer to the cornea? Or should we reduce the
+% length of the eye instead? 
+% Let's do the former
+acdRange = [2.57 2.93 3.29];
+deltaACD = 3.05-acdRange;
+lensFilenames_method2 = cell(length(deltaACD),1);
+for ii = 1:length(deltaACD)
     
-    x_min = ecc-window_width_deg/2;
-    x_max = ecc+window_width_deg/2;
+    % Shift the axial positions
+    % We are moving the pupil+lens toward the scene/cornea
+    currAxialPositions = axialPositions;
+    currAxialPositions(4) = currAxialPositions(4) - deltaACD(ii);
+    currAxialPositions(3) = currAxialPositions(3) - deltaACD(ii);
     
-    diff = x - x_min;
-    indx_min = (diff == min(diff));
+    % Recalculate the thickness
+    currAxialPositions(end+1) = currAxialPositions(end);
+    currThickness = currAxialPositions(2:end) - currAxialPositions(1:(end-1));
     
-    diff = x - x_max;
-    indx_max = (diff == min(diff));
+    % Write out a new lens files
+    currLensMatrix = lensMatrix;
+    currLensMatrix(:,3) = currThickness;
     
-    window_width_px = indx_max - indx_min;
-    
+    lensFilenames_method2{ii} = fullfile(lensDir,...
+        sprintf('navarroAccommodated_%0.2f_acd_%0.2f.dat',...
+        scene3d.accommodation,acdRange(ii)));
+    writeRealisticEyeLensFile(currLensMatrix,...
+        lensFilenames_method2{ii},...
+        scene3d.accommodation)
+   
 end
-%}
 
-% Let's select the points manually so we can get the cross points on the
-% grid
+% Concatanate the lens files
+lensFilenames = {[lensFilenames_method1; lensFilenames_method2]};
+lensFilenames = lensFilenames{:};
+
+%% Take windows along the horizontal and vertical meridian
 
 % Show rectangles?
 showRectFlag = true;
@@ -197,12 +219,23 @@ fullResolution = 8192;
 % Takes around 30 sec
 if(showRectFlag)
     scene3d.resolution = 512;
-    scene3d.numRays = 128;
+    scene3d.numRays = 64;
     scene3d.numCABands = 0;
+    
     [oi, ~] = scene3d.render;
     rgb = oiGet(oi,'rgb');
     H = figure();
     imshow(rgb); hold on;
+    
+    % Plot
+    x = scene3d.angularSupport;
+    [~, idxpos] = min(abs(x-23));
+    [~, idxneg] = min(abs(x+23));
+    rgb_crop = rgb(idxneg:idxpos,idxneg:idxpos,:);
+    x_crop = x(idxneg:idxpos);
+    x_crop(1) = -23; x_crop(end) = 23;
+    H2 = plotWithAngularSupport(x_crop,x_crop,rgb_crop);
+    NicePlot.exportFigToPNG(fullfile(saveDir,'fullGrid.png'),H2,300);
 end
 
 % sz = size(rgb);
@@ -275,7 +308,7 @@ end
 %% Render with the new lens files and for each crop window
 
 % Loop through the new lens files
-for ii = 1:length(deltaPupil)
+for ii = 1:length(lensFilenames)
     
     % Switch lens file
     scene3d.lensFile = lensFilenames{ii};
@@ -286,7 +319,8 @@ for ii = 1:length(deltaPupil)
         scene3d.recipe.set('cropwindow',cropWindows_all{jj});
     
         % Scene name
-        scene3d.name = sprintf('tcaPupilShift_%0.2f_%d',deltaPupil(ii),jj);
+        [p,n,e] = fileparts(lensFilenames{ii}); % Use filename
+        scene3d.name = sprintf('%s_%d',n,jj);
         
         % Local
         %     [oi, ~] = scene3d.render;
@@ -294,7 +328,7 @@ for ii = 1:length(deltaPupil)
         %     oiWindow;
         
         % Cloud
-        if(ii == length(deltaPupil) &&...
+        if(ii == length(lensFilenames) &&...
                 jj == length(cropWindows_all))
             uploadFlag = true;
         else

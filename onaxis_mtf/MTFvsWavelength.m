@@ -26,7 +26,7 @@ lineColor = RGB2XWFormat(rgb);
 % point at infinity.
 %
 dataDir = ileFetchDir('slantedBar_eyeModels');
-slantedBar4mm_fn = fullfile(dataDir,'slantedBarLeGrand_diff1_pupil4mm.mat');
+slantedBar4mm_fn = fullfile(dataDir,'slantedBarNavarro_diff1_pupil4mm.mat');
 load(slantedBar4mm_fn);
 
 oi = oiSet(oi,'bitDepth',32); 
@@ -76,7 +76,7 @@ h2 = plot(u,M_Watson,'color',lineColor(2,:));
 %% Load Zemax data
 % The Zemax data has been saved out as a text file. We read in the text
 % files and load up the MTF's.
-%{
+
 % We use the geometric now since it's functionally the same as ray-tracing.
 zmx_wave = [450 500 550 600 650];
 
@@ -89,13 +89,13 @@ lineColor_zmx = RGB2XWFormat(rgb);
 
 for ii = 1:length(zmx_wave)
     
-    fn = fullfile(isetlenseyeRootPath,'onaxis_mtf',...
-        'zemax_wave','noDiffraction',...
-        sprintf('mtf_navarro_0dpt_%dnm_4mm_cycpermm_noDiff.txt',zmx_wave(ii)));
-    
 %     fn = fullfile(isetlenseyeRootPath,'onaxis_mtf',...
-%         'zemax_wave','diffractionLimited',...
-%         sprintf('mtf_navarro_0dpt_%dnm_4mm_cycpermm.txt',zmx_wave(ii)));
+%         'zemax_wave','noDiffraction',...
+%         sprintf('mtf_navarro_0dpt_%dnm_4mm_cycpermm_noDiff.txt',zmx_wave(ii)));
+    
+    fn = fullfile(isetlenseyeRootPath,'onaxis_mtf',...
+        'zemax_wave','diffractionLimited',...
+        sprintf('mtf_navarro_0dpt_%dnm_4mm_cycpermm.txt',zmx_wave(ii)));
     
     data_geometric = readZemaxMTF(fn);
     
@@ -110,7 +110,7 @@ for ii = 1:length(zmx_wave)
         'color',lineColor_zmx(ii,:),...
         'LineStyle',':');
 end
-%}
+
 %% Add legend
 
 figure(mtfFig);

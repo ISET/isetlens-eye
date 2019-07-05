@@ -32,6 +32,9 @@ load(slantedBar3mm_fn);
 
 oi = oiSet(oi,'bitDepth',32); 
 
+% Apply lens transmittance
+oi = applyLensTransmittance(oi,1.0);
+
 % Check optical image
 ieAddObject(oi);
 oiWindow;
@@ -50,11 +53,13 @@ title(sprintf('On-Axis MTF \n (3 mm pupil, polychromatic)'))
 xlabel('Spatial Frequency (cycles/deg)');
 ylabel('Contrast Reduction (SFR)');
 xlim([0 100])
-set(findall(gca,'-property','FontSize'),'FontSize',24)
-set(findall(gca,'-property','LineWidth'),'LineWidth',3)
 
-set(gca,'Position',[0.1300    0.1100    0.7750    0.7827]);
-set(gcf,'Position',[0.0069    0.2044    0.6356    0.6889]);
+ax = get(MTFfig,'CurrentAxes');
+set(findall(ax,'-property','FontSize'),'FontSize',24)
+set(findall(ax,'-property','LineWidth'),'LineWidth',3)
+
+set(ax,'Position',[0.1300    0.1100    0.7750    0.7827]);
+set(MTFfig,'Position',[0.0069    0.2044    0.6356    0.6889]);
 
 legend(h3,'Navarro (ISETBio)',...
     'location','northeast')
@@ -158,18 +163,18 @@ title(sprintf('On-Axis MTF \n (3 mm pupil, polychromatic)'))
 xlabel('Spatial Frequency (cycles/deg)');
 ylabel('Contrast Reduction (SFR)');
 
-xlim([0 100])
-% set(gca, 'YScale', 'log')
-% set(gca, 'XScale', 'log')
+axis([0 100 0 1])
+% set(ax, 'YScale', 'log')
+% set(ax, 'XScale', 'log')
 % xticks([1 2 5 10 20 50 100])
 % yticks([0.01 0.02 0.05 0.1 0.2 0.5 1])
 % axis([1 100 0.01 1])
-% thisAxis = gca;
+% thisAxis = ax;
 % thisAxis.MinorGridAlpha = 0.15;
 
-set(findall(gca,'-property','FontSize'),'FontSize',24)
-set(findall(gca,'-property','LineWidth'),'LineWidth',3)
-% set(gca,'Position',[0.1300    0.1100    0.7750    0.7847]);
+set(findall(ax,'-property','FontSize'),'FontSize',24)
+set(findall(ax,'-property','LineWidth'),'LineWidth',3)
+% set(ax,'Position',[0.1300    0.1100    0.7750    0.7847]);
 % set(gcf,'Position',[0.0070    0.4708    0.2797    0.4389]);
 % set(gcf,'Position',[0.0070    0.3340    0.4629    0.5597]);
 

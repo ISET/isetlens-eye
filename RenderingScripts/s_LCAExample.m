@@ -36,7 +36,7 @@ cloudBucket = 'gs://renderingfrl';
 % dockerImage = 'gcr.io/primal-surfer-140120/pbrt-v2-spectral-gcloud';
 % cloudBucket = 'gs://primal-surfer-140120.appspot.com';
 
-clusterName = 'validate';
+clusterName = 'lca';
 zone         = 'us-central1-a';
 instanceType = 'n1-highcpu-32';
 
@@ -74,10 +74,10 @@ scene3d.pupilDiameter = 4;
 if(lqFlag)
     scene3d.numRays = 128; % LQ
     scene3d.resolution = 128;
-    %     scene3d.numCABands = 6;
+    scene3d.numCABands = 6;
     
 else
-    scene3d.numRays = 4096;
+    scene3d.numRays = 8192;
     scene3d.resolution = 800;
     scene3d.numCABands = 16;
 end
@@ -87,9 +87,17 @@ end
 % our cone mosaic.
 % These windows are used in lcaExample/lcaExample.m
 
+%{
 r_zoom(1,:) = [121   240    56    56];
 r_zoom(2,:) = [317   293    56    56];
 r_zoom(3,:) = [560   335    56    56];
+%}
+
+% Temp
+% only render a small strip to plot the irradiance profile in the paper.
+r_zoom(1,:) = [121   240+56/2    56    6];
+r_zoom(2,:) = [317   293+56/2    56    6];
+r_zoom(3,:) = [560   335+56/2    56    6];
 
 % We need to convert these rectangles to crop windows
 cropwindows_all = zeros(size(r_zoom));
@@ -109,7 +117,7 @@ for ii = 1:length(distm)
     scene3d.accommodation = 1/distm(ii); % Accommodate to each letter
     
     % Loop through the crop windows
-    for jj = 1:size(cropwindows_all,1)
+    for jj = 2 %1:size(cropwindows_all,1)
         
         scene3d.recipe.set('cropwindow',cropwindows_all(jj,:));
         

@@ -51,7 +51,7 @@ gcp.targets = [];
 %% Load up the slantedBar scene
 
 % LQ mode flag (for testing)
-lqFlag = true;
+lqFlag = false;
 
 planeDistance = 50;
 scene3d = sceneEye('slantedBar','planeDistance',planeDistance);
@@ -59,22 +59,32 @@ scene3d = sceneEye('slantedBar','planeDistance',planeDistance);
 scene3d.numBounces = 1;
 scene3d.accommodation = 0;
 
+% Remove lens transmission, we can add it in later
+scene3d.lensDensity = 0.0;
+
 if(lqFlag)
     scene3d.resolution = 256;
     scene3d.numRays = 128;
-    scene3d.numCABands = 0;
+    scene3d.numCABands = 31;
 else
     scene3d.numRays = 2048;
     scene3d.resolution = 1024;
-    scene3d.numCABands = 16;
+    scene3d.numCABands = 31;
 end
 
 %% Run for several pupil diameters, models, and diffraction on/off
 
-pupilDiameters = [4 6]; % [2 4 6];
-fov = [2 3]; % we have to increase the FOV for the larger pupil diameter
-diffFlag = 1; % [0 1]
-modelNames = {'Navarro','LeGrand','Arizona'};
+% pupilDiameters = [4 6]; % [2 4 6];
+% fov = [2 3]; % we have to increase the FOV for the larger pupil diameter
+% diffFlag = 1; % [0 1]
+
+pupilDiameters = 3;
+fov = 2;
+diffFlag = [0 1];
+%diffFlag = 1;
+
+% modelNames = {'Navarro','LeGrand','Arizona'};
+modelNames = {'Navarro'};
 
 for ii = 1:length(diffFlag)
     for jj = 1:length(pupilDiameters)
