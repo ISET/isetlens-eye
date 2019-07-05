@@ -31,6 +31,12 @@ load(fullfile(dataDir,'navarro.mat'));
 oiNavarro = oi;
 xNavarro = scene3d.angularSupport;
 
+%% Apply lens transmittance
+
+oiArizona = applyLensTransmittance(oiArizona,1.0);
+oiLeGrand = applyLensTransmittance(oiLeGrand,1.0);
+oiNavarro = applyLensTransmittance(oiNavarro,1.0);
+
 %% Save RGB images of the three optical images
 
 fontSize = 20;
@@ -39,33 +45,23 @@ rgbArizona = oiGet(oiArizona,'rgb');
 rgbGullstrand = oiGet(oiLeGrand,'rgb');
 rgbNavarro = oiGet(oiNavarro,'rgb');
 
+% Better axes labels this way
+xArizona(1) = round(xArizona(1),1);
+xLeGrand(1) = round(xLeGrand(1),1);
+xNavarro(1) = round(xNavarro(1),1);
+
 % Plot and save
-H1 = figure(1); clf;
-image(xArizona,xArizona,rgbArizona);
-axis image;
-ax = gca;
-ax.FontSize = fontSize; 
-set(ax,'ytick',[])
-xlabel('degrees','FontSize',fontSize);
-saveas(H1,fullfile(saveDir,'arizona.pdf'))
+H1 = plotWithAngularSupport(xArizona,xArizona,rgbArizona,...
+    'axesSelect','xaxis','FontSize',30);
+NicePlot.exportFigToPNG(fullfile(saveDir,'arizona.png'),H1,300)
 
-H2 = figure(2); clf;
-image(xLeGrand,xLeGrand,rgbGullstrand);
-axis image;
-ax = gca;
-ax.FontSize = fontSize; 
-set(ax,'ytick',[])
-xlabel('degrees','FontSize',fontSize);
-saveas(H2,fullfile(saveDir,'gullstrand.pdf'))
+H2 = plotWithAngularSupport(xLeGrand,xLeGrand,rgbGullstrand,...
+    'axesSelect','xaxis','FontSize',30);
+NicePlot.exportFigToPNG(fullfile(saveDir,'gullstrand.png'),H2,300)
 
-H3 = figure(3); clf;
-image(xNavarro,xNavarro,rgbNavarro);
-axis image;
-ax = gca;
-ax.FontSize = fontSize; 
-set(ax,'ytick',[])
-xlabel('degrees','FontSize',fontSize);
-saveas(H3,fullfile(saveDir,'navarro.pdf'))
+H3 = plotWithAngularSupport(xNavarro,xNavarro,rgbNavarro,...
+    'axesSelect','xaxis','FontSize',30);
+NicePlot.exportFigToPNG(fullfile(saveDir,'navarro.png'),H3,300)
 
 
 

@@ -5,6 +5,7 @@
 
 %% Initialize
 ieInit;
+clear; close all;
 
 %% Load the data
 % We have two sets of data, one where the letters are placed at 1.8 1.2 0.6
@@ -25,6 +26,9 @@ if(strcmp(dirName,'lcaExample_far'))
         fullImages{ii} = load(fullfile(dataDir,...
             sprintf('lettersAtDepth_%0.2fdpt.mat',accom(ii))));
         
+        % Add lens transmission
+        fullImages{ii}.oi = applyLensTransmittance(fullImages{ii}.oi,1.0);
+        
         % We've rendered the zoomed in rectangles defined above (e.g.
         % r_Azoom_px) with a higher resolution, so we'll load those directly
         % instead of cropping the full image.
@@ -34,6 +38,11 @@ if(strcmp(dirName,'lcaExample_far'))
             % Note: the angular support on these cropped optical images is
             % not correct. This is a bug that needs to be fixed; it wasn't
             % set correctly during rendering.
+            
+            % Add lens transmission
+            cropImages{ii,jj}.oi =...
+                applyLensTransmittance(cropImages{ii,jj}.oi,1.0);
+            
         end
         
         % Show the optical images
@@ -50,7 +59,7 @@ if(~exist(saveDir,'dir'))
 end
 
 %% Plot figures
-%{
+
 % Should be the same for all images
 full_angSupport = fullImages{1}.scene3d.angularSupport;
 
@@ -73,6 +82,7 @@ for ii = 1:length(accom)
     fullRGB = oiGet(fullImages{ii}.oi,'rgb');
     
     % Save the full image 
+    %{
     figure(fullImage); clf;
     image(full_angSupport,full_angSupport,fullRGB);
     axis image; xlabel('degrees');
@@ -84,17 +94,14 @@ for ii = 1:length(accom)
     fullImagefn = fullfile(saveDir,...
         sprintf('fullImage_%i.png',ii));
     saveas(fullImage,fullImagefn);
+    %}
     
     % Save one with just the green box
     figure(fullImage); clf;
-    image(full_angSupport,full_angSupport,fullRGB);
-    axis image; xlabel('degrees');
-    rectangle('Position',r_Bzoom_deg,'EdgeColor','g','LineWidth',4)
-    set(gca,'ytick',[]); % don't need y-axis for this one
-    set(findall(gcf,'-property','FontSize'),'FontSize',16)
-    fullImagefn = fullfile(saveDir,...
-        sprintf('fullImage_%i_onlyGreen.png',ii));
-    saveas(fullImage,fullImagefn);
+    fullImage = plotWithAngularSupport(full_angSupport,full_angSupport,...
+        fullRGB,'figHandle',fullImage);
+    fn = fullfile(saveDir,sprintf('lcaFullImage_%d.png',ii));
+    NicePlot.exportFigToPNG(fn,fullImage,300);
     
     rectColors = {'r','g','m'};
  
@@ -114,19 +121,23 @@ for ii = 1:length(accom)
         y1 = linspace(0,1,length(curr_angSupport_y));
         y2 = linspace(0,1,size(cropRGB,1));
         curr_angSupport_y = interp1(y1,curr_angSupport_y,y2);
-        
+       
         % Save the cropped RGB images
         figure(cropFig); clf;
+        
+        %{
         image(curr_angSupport_x,curr_angSupport_y,cropRGB);
         rectangle('Position',r_zoom_inDeg(jj,:),...
             'EdgeColor',rectColors{jj},...
             'LineWidth',6)
         axis image; xlabel('degrees');
         set(findall(gcf,'-property','FontSize'),'FontSize',16)
+        %}
         
-        cropFigfn = fullfile(saveDir,...
-            sprintf('cropRGB_%i_%i.png',ii,jj));
-        saveas(cropFig,cropFigfn);
+        cropFig = plotWithAngularSupport(curr_angSupport_x,curr_angSupport_y,...
+            cropRGB,'figHandle',cropFig);
+        fn = fullfile(saveDir,sprintf('lcaCropImage_%d_%d.png',ii,jj));
+        NicePlot.exportFigToPNG(fn,cropFig,300);
         
         % Save the angular support for use in the next section
         angSupportCropped_x{ii,jj} = curr_angSupport_x;
@@ -135,14 +146,13 @@ for ii = 1:length(accom)
     end
     
 end
-%}
+
 
 %% Save the cropped angular support so we can just load it later
 % save('angSupportCropped.mat','angSupportCropped_x','angSupportCropped_y');
 
 %% Plot horizontal edge so that we can see the LCA effect more clearly
-% TEMP
-%{
+
 for ii = 1:3 % over accommodation
     for jj = 2 % the "B"
         
@@ -162,6 +172,9 @@ for ii = 1:3 % over accommodation
         photons = oiGet(oi_edge,'photons');
         wave = oiGet(oi_edge,'wave');
         
+        ieAddObject(oi_edge);
+        oiWindow;
+        
         edgeFig = figure(); clf;
         hold on; grid on;
         
@@ -172,107 +185,35 @@ for ii = 1:3 % over accommodation
             currPhotons = photons(round(r(2)/2),:,wave == wls(w));
             plot(x_edge,currPhotons,color{w});
         end
-        axis([min(x_edge) max(x_edge) 0 11.5e14])
-              
-        % Increase font size and line width
-        set(findall(gcf,'-property','FontSize'),'FontSize',18)
-        set(findall(gca,'-property','LineWidth'),'LineWidth',3)
+        axis([min(x_edge) max(x_edge) 0 12e14])
         
-        xlabel('Position (deg)','FontSize',20);
+        if(ii == 2)
+            legendCell = cellstr(num2str(wls','%d nm'));
+            legend(legendCell,'Location','best');
+        end
+        
+        % Increase font size and line width
+        set(findall(gcf,'-property','FontSize'),'FontSize',22)
+        set(findall(gca,'-property','LineWidth'),'LineWidth',4)
+        
+        xlabel('\it space (degs)','FontSize',20);
         ylabel('Irradiance (q/s/m^2/nm)','FontSize',20)
         
         % Save the figure directly
+        set(edgeFig,'color','w');
         cropFigfn = fullfile(saveDir,...
             sprintf('edgePlot_%i.png',ii));
-        saveas(edgeFig,cropFigfn);
+        NicePlot.exportFigToPNG(cropFigfn,edgeFig,300);
         
     end
 end
-%}
-
-%% Bring cropped images to the cone mosaic (rectangular)
-%{
-k = 1;
-cmfig = figure();
-for ii = 2 %1:3 % For each focus
-    for jj = 1:3 % For each letter
-        
-        currAngSupport_x = angSupportCropped_x{ii,jj};
-        currAngSupport_y = angSupportCropped_y{ii,jj};
-        
-        % Halve the image so we can see the individual cones better
-        currOI = cropImages{ii,jj}.oi;
-        sz = oiGet(currOI,'size');
-        r = [round(sz(1)/4) round(sz(2)/4) round(sz(1)/2) round(sz(2)/2)];
-        currOI = oiCrop(currOI,r);
-        currRGB = oiGet(currOI,'rgb');
-        % ieAddObject(currOI)
-        % oiWindow;
-        
-        % Also halve the angular support
-        [X, Y] = meshgrid(currAngSupport_x,currAngSupport_y);
-        X = imcrop(X,r);
-        Y = imcrop(Y,r);
-        currAngSupport_x = X(1,:);
-        currAngSupport_y = Y(:,1)';
-
-        % Right now we use the on-axis cone mosaic, but maybe we can input
-        % eccentricity somewhere?
-        
-        % Create the coneMosaic object
-        cMosaic = coneMosaic;
-        
-        % Set size of the mosaic
-        cMosaic.setSizeToFOV(oiGet(currOI, 'fov'));
-        
-        cMosaic.compute(currOI);
-        cMosaic.window;
-        
-        cmAbsorptions = cMosaic.absorptions;
-        
-        % Plot OI in figure
-        figure(cmfig);
-        subplot(3,3,k); k = k +1;
-        image(currAngSupport_x,...
-            currAngSupport_y,...
-            currRGB);
-        axis image; xlabel('deg');
-        
-        % Plot cone mosaic in figure
-        % These lines are mostly taken from coneMosaic.plot - I haven't
-        % figured out the best way to use plot directly in a subplot. Need
-        % to ask DB/BW.
-        support = [4, 4];
-        spread = 2;
-        maxCones = 5e4;
-        nCones = size(cMosaic.coneLocs, 1);
-        locs = cMosaic.coneLocs;
-        pattern = cMosaic.pattern(:);
-        [uData.support, uData.spread, uData.delta, uData.mosaicImage] = ...
-            conePlot(locs * 1e6, pattern, support, spread);
-        subplot(3,3,k); k = k + 1;
-        imagesc(uData.mosaicImage);
-        axis off;
-        axis image;
-        
-        % Plot cone absorptions in figure
-        subplot(3,3,k); k = k + 1;
-        imagesc(cmAbsorptions); colormap(gray); colorbar;
-        title('Absorptions per integration time');
-        axis image; axis off;
-        
-        % Increase font size
-        set(findall(gcf,'-property','FontSize'),'FontSize',14)
-
-         
-    end
-end
-%}
 
 %% Bring cropped images to the cone mosaic (hex)
 % Since we can only do parafoveal region right now, only take the cropped
 % image near the fovea.
 
+% The following code was moved prim
+%{
 load('angSupportCropped.mat');
 
 k = 1;
@@ -509,3 +450,4 @@ function visualizeMosaicResponseAlongMeridian(...
     ylabel('\it cone excitation');
     title(figureTitle);
 end
+%}

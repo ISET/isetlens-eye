@@ -3,13 +3,18 @@ clear; close all;
 ieInit;
 
 %% Load the data
-load('edgeOIForConeMosaic.mat')
+load('edgeOIForConeMosaic_2.mat')
 
 % Load corresponding cone mosaic
 dataDir = ileFetchDir('hexMosaic');
 cmFileName = fullfile(dataDir,...
     'theHexMosaic0.71degs.mat');
 load(cmFileName);
+
+saveDir = fullfile(isetlenseyeRootPath,'outputImages','coneMosaic');
+if(~exist(saveDir,'dir'))
+    mkdir(saveDir);
+end
 
 %% Absorbance
 %{
@@ -48,7 +53,17 @@ plot(1:m,photonS(midI,:),'b');
 
 %% Calculate cone absorptions
 
+% Apply lens transmittance
+currOI = applyLensTransmittance(currOI,1.0);
+
+% Show it
+rgb = oiGet(currOI,'rgb');
+imwrite(rgb,fullfile(saveDir,'rgbEdge.png'))
+
 currOI = oiSet(currOI,'mean illuminance',5);
+
+% For stray light and spontaneous opsin activation (suggested by NC)
+theHexMosaic.coneDarkNoiseRate = [250 250 250];
 
 theHexMosaic.compute(currOI);
 theHexMosaic.window;
@@ -56,21 +71,16 @@ theHexMosaic.window;
 coneExcitations = theHexMosaic.absorptions;
 
 % Use Nicolas' plotting code
-coneMosaicActivationVisualize(theHexMosaic, coneExcitations,currOI)
+coneMosaicActivationVisualize(theHexMosaic, coneExcitations,currOI,saveDir)
         
 %% 
-function coneMosaicActivationVisualize(theMosaic, spatialActivationMap,oi)
-    
-saveDir = fullfile(isetlenseyeRootPath,'outputImages','coneMosaic');
-if(~exist(saveDir,'dir'))
-    mkdir(saveDir);
-end
+function coneMosaicActivationVisualize(theMosaic, spatialActivationMap,oi,saveDir)
 
     % determine plotting ranges and ticks
     responseRange = prctile(spatialActivationMap(:), [1 99]);
     spaceLimitsDegs = theMosaic.fov/2.*[-1 1]; %0.26*[-1 1];
     spaceLimitsMeters = spaceLimitsDegs*theMosaic.micronsPerDegree * 1e-6;
-    tickDegs = (-1*round(theMosaic.fov/2,1)):0.1:(round(theMosaic.fov/2,1)); %-0.3:0.1:0.3;
+    tickDegs = (-1*round(theMosaic.fov/2,1)):0.2:(round(theMosaic.fov/2,1)); %-0.3:0.1:0.3;
     tickMeters = tickDegs * theMosaic.micronsPerDegree * 1e-6;
     
     % Start figure
@@ -99,7 +109,7 @@ end
 %         'FontSize', 14);
     set(gca, 'XTick', tickMeters, 'XTickLabel', sprintf('%2.1f\n', tickDegs), ...
         'XLim', spaceLimitsMeters,...
-        'FontSize', 14);
+        'FontSize', 24);
     xlabel('\it space (degs)');
 %     ylabel('\it space (degs)');
     box on;

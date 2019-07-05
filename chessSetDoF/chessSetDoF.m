@@ -16,13 +16,26 @@ end
 dirName = 'chessSetDoF_skymap'; % far data
 dataDir = ileFetchDir(dirName);
     
-pupilDiameters = 2:0.5:6;
+pupilDiameters = [2 4 6];
 rgbData = [];
 k = 1;
 for ii = [1:length(pupilDiameters) length(pupilDiameters):-1:1]
     
     load(fullfile(dataDir,...
         sprintf('DoF%0.2fmm.mat',pupilDiameters(ii))));
+    
+    % Apply lens transmittance
+    oi = applyLensTransmittance(oi,1.0);
+    
+    % Scale the mean illuminance to pupil size 
+    % Not sure why this wasn't applied automatically when we initially
+    % rendered
+    lensArea = pi*(pupilDiameters(ii)/2)^2;
+    meanIlluminance = 5*lensArea; % 5 lux per mm^2
+    oi        = oiAdjustIlluminance(oi,meanIlluminance);
+    oi.data.illuminance = oiCalculateIlluminance(oi);
+    
+    ieAddObject(oi);
     
     % Get the RGB image
     rgb = oiGet(oi,'rgb');
@@ -32,8 +45,10 @@ for ii = [1:length(pupilDiameters) length(pupilDiameters):-1:1]
     k = k + 1;
 end
 
+oiWindow;
+    
 %% Write out the video
-
+%{
 fn = fullfile(outputDir,'chessSetDoF_movie.mp4');
 
 % The quality for this isn't great for some reason.
@@ -63,6 +78,7 @@ for ii = [1:nFiles nFiles:-1:1]
 end
 
 close(vidObj);
+%}
 
 %% Write out frames
 

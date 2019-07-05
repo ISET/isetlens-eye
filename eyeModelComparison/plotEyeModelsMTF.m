@@ -13,7 +13,8 @@ if(~exist(saveDir,'dir'))
     mkdir(saveDir);
 end
 
-colors = {'r','g','b'};
+% colors = {'r','g','b'};
+markers = {'k*','ko','ks'};
 
 %% Load the data
 
@@ -32,6 +33,9 @@ for ii = 1:length(modelNames)
     
     load(fullfile(dataDir,fn));
     
+    % Apply lens transmittance
+    oi = applyLensTransmittance(oi,1.0);
+
     [freq,mtf] = calculateMTFfromSlantedBar(oi);
     
     % Remove spurious resolution
@@ -43,8 +47,12 @@ for ii = 1:length(modelNames)
     end
     
     figure(MTFfig); hold on;
-    h{ii} = plot(freq,mtf,colors{ii});
+    plot(freq,mtf,'k-');
     
+    freq_tmp = freq(freq>5 & freq<70);
+    mtf_tmp = mtf(freq>5 & freq<70);
+    
+    h{ii} = plot(freq_tmp(1:10:end),mtf_tmp(1:10:end),markers{ii});
     % Compare with Zemax (debug)
     %{
     fn = sprintf('%s_polychromatic_%dmm_0dpt_cycPermm_diff.txt',modelNames{ii},4);
@@ -62,7 +70,8 @@ end
 % These MTF's have been precalculated in the script:
 %   generateMTFfromThibos.m
 
-load(fullfile(isetlenseyeRootPath(),'onaxis_mtf','thibos','ThibosMTF_3mm.mat'));
+load(fullfile(isetlenseyeRootPath(),'onaxis_mtf','thibos',...
+    sprintf('ThibosMTF_%dmm.mat',pupilDiam)));
 
 % Plot
 freq = freqAll(1,:); % These should all be the same.
@@ -79,20 +88,13 @@ end
 figure(MTFfig);
 grid on;
 box on;
-title(sprintf('On-Axis MTF \n (%d mm pupil, polychromatic)',...
-    scene3d.pupilDiameter))
+% title(sprintf('On-Axis MTF \n (%d mm pupil, polychromatic)',...
+%     scene3d.pupilDiameter))
 xlabel('Spatial Frequency (cycles/deg)');
-ylabel('Contrast Reduction (SFR)');
-% set(gca, 'YScale', 'log')
-% set(gca, 'XScale', 'log')
-% xticks([1 2 5 10 20 50 100])
-% yticks([0.01 0.02 0.05 0.1 0.2 0.5 1])
-% axis([0 100 0.01 1])
+ylabel('Contrast Reduction');
 
-% thisAxis = gca;
-% thisAxis.MinorGridAlpha = 0.15;
-
-xlim([0 100])
+xlim([0 75])
+ylim([0 1])
 % set(gca, 'YScale', 'log')
 % set(gca, 'XScale', 'log')
 % xticks([1 2 5 10 20 50 100])
@@ -101,12 +103,13 @@ xlim([0 100])
 % thisAxis = gca;
 % thisAxis.MinorGridAlpha = 0.15;
 
-set(findall(gca,'-property','FontSize'),'FontSize',24)
-set(findall(gca,'-property','LineWidth'),'LineWidth',3)
+xticks([0 25 50 75])
+yticks([0 0.25 0.5 0.75 1])
 
-% set(MTFfig,'Position',[0.0070    0.3340    0.4629    0.5597]);
-% set(gca,'Position',[0.1300    0.1100    0.7750    0.7847]);
-% set(gcf,'Position',[0.0070    0.4708    0.2797    0.4389]);
+set(findall(gca,'-property','FontSize'),'FontSize',40)
+set(findall(gca,'-property','LineWidth'),'LineWidth',5)
+set(findall(gca,'-property','MarkerSize'),'MarkerSize',30)
+
 set(gca,'Position',[0.1300    0.1100    0.7750    0.7827]);
 set(gcf,'Position',[0.0069    0.2044    0.6356    0.6889]);
 
@@ -116,7 +119,7 @@ modelNames{end+1} = 'Thibos (2002)';
 legend([h{1} h{2} h{3} h{4}],modelNames,'location','northeast');
 
 % Save out image
-fn = fullfile(saveDir,'mtfFig.png');
+fn = fullfile(saveDir,sprintf('mtfFig_%d.png',pupilDiam));
 NicePlot.exportFigToPNG(fn, MTFfig, 300); 
 
 
