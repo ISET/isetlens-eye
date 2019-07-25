@@ -1,4 +1,4 @@
-function artifacts = listFiles()
+function artifacts = ileListFiles()
 % List names of files on rdt, in the isetlens-eye data folder. 
 
 remotedirectory = '/resources/isetlensdata';

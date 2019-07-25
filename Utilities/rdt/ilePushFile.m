@@ -1,4 +1,4 @@
-function rd = pushFile(fnameZIP,varargin)
+function rd = ilePushFile(fnameZIP,varargin)
 % Push a zip file to the RDT web site, specifically into the isetlensdata
 % folder. You must have permission/access to the server in order to push. 
 

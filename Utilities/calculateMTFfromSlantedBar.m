@@ -46,11 +46,7 @@ cropflag           = p.Results.cropflag;
 % routine will be confused by the edges of the retinal image if we don't
 % first crop it.
 if(cropflag)
-    res = oiGet(oi,'rows');
-    cropRadius = res/(2*sqrt(2))-5;
-    oiCenter = res/2;
-    barOI = oiCrop(oi,round([oiCenter-cropRadius oiCenter-cropRadius ...
-        cropRadius*2 cropRadius*2]));
+    barOI = oiCropRetinaBorder(oi);
 else
     barOI = oi;
 end

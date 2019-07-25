@@ -61,8 +61,7 @@ switch axesSelect
     otherwise
         ylabel('\it space (degs)','FontSize', fontSize);
         xlabel('\it space (degs)','FontSize', fontSize);
-end
-    
+end    
 
 ax.TickLength = ax.TickLength.*2;
 ax.LineWidth = ax.LineWidth.*6;
