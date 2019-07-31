@@ -7,7 +7,7 @@ cropWindow_px(3:4) = round(cropWindow(3:4).*imageHeight);
 
 r_width = cropWindow_px(2) - cropWindow_px(1);
 r_height = cropWindow_px(4) - cropWindow_px(3);
-r = [cropWindow_px(1) cropWindow_px(2) r_width r_height];
+r = [cropWindow_px(1) cropWindow_px(3) r_width r_height];
 
 end
 
