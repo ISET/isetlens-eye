@@ -75,20 +75,7 @@ else
     % Zero out all wavelengths aside from the ones we're interested in.
     photons = oiGet(barOI,'photons');
     removeThese = (sampledWavelengths ~= closestWavelength);
-    % --
-    %{
-    % DEBUG TEST: Will we get cleaner results if we add in
-    % neighboring wavelength samples?
-    deltaWls = sampledWavelengths(2) - sampledWavelengths(1);
-    removeTheseTarget = (sampledWavelengths ~= closestWavelength);
-    removeTheseNeighbor1 = (sampledWavelengths ~= (closestWavelength+deltaWls));
-    removeTheseNeighbor2 = (sampledWavelengths ~= (closestWavelength-deltaWls));
-    removeThese = (removeTheseTarget & removeTheseNeighbor1 & removeTheseNeighbor2);
-    [n,m,w] = size(photons);
-    photons(:,:,removeThese) = zeros(n,m,w-3);
-    barOI = oiSet(barOI,'photons',photons);
-    %}
-    % --
+
     [n,m,w] = size(photons);
     photons(:,:,removeThese) = zeros(n,m,w-1);
     barOI = oiSet(barOI,'photons',photons);

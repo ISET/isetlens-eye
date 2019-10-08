@@ -33,7 +33,7 @@ oiWindow;
 dirName = 'hexMosaic'; % far data
 dataDir = ileFetchDir(dirName);
 
-load(fullfile(dataDir,'theHexMosaic3deg.mat'));
+load(fullfile(dataDir,'theHexMosaic0.71degs.mat'));
 if(~exist('hexMosaic','var'))
     hexMosaic = theHexMosaic;
 end

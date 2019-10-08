@@ -5,7 +5,7 @@ function [oi,r] = oiCropRetinaBorder(oi)
 % in a circle.
 
 res = oiGet(oi,'rows');
-cropRadius = res/(2*sqrt(2))-5;
+cropRadius = res/(2*sqrt(2))-2;
 oiCenter = res/2;
 
 r = round([oiCenter-cropRadius oiCenter-cropRadius ...

@@ -16,7 +16,7 @@ end
 dirName = 'chessSetDoF_skymap'; % far data
 dataDir = ileFetchDir(dirName);
     
-pupilDiameters = [2 4 6];
+pupilDiameters = [2:0.5:6];
 rgbData = [];
 k = 1;
 for ii = [1:length(pupilDiameters) length(pupilDiameters):-1:1]
@@ -25,7 +25,7 @@ for ii = [1:length(pupilDiameters) length(pupilDiameters):-1:1]
         sprintf('DoF%0.2fmm.mat',pupilDiameters(ii))));
     
     % Apply lens transmittance
-    oi = applyLensTransmittance(oi,1.0);
+    % oi = applyLensTransmittance(oi,1.0);
     
     % Scale the mean illuminance to pupil size 
     % Not sure why this wasn't applied automatically when we initially
@@ -48,13 +48,13 @@ end
 oiWindow;
     
 %% Write out the video
-%{
-fn = fullfile(outputDir,'chessSetDoF_movie.mp4');
+
+fn = fullfile(outputDir,'chessSetDoF_movie');
 
 % The quality for this isn't great for some reason.
 % ieMovie(rgbData,'vname',fn,'FrameRate',2,'titles',titles);
 
-vidObj = VideoWriter(fn,'Uncompressed AVI'); %
+vidObj = VideoWriter(fn,'MPEG-4'); %
 open(vidObj);
 
 nFiles = size(rgbData,4);
@@ -78,10 +78,10 @@ for ii = [1:nFiles nFiles:-1:1]
 end
 
 close(vidObj);
-%}
+
 
 %% Write out frames
-
+%{
 pd_writeOut = [2 4 6];
 % midPt = round(length(pupilDiameters)/2);
 
@@ -91,3 +91,4 @@ for ii = 1:length(pd_writeOut)
     fn = fullfile(outputDir,sprintf('chessSetDoF_%dmm.png',pd_writeOut(ii)));
     imwrite(singleFrame,fn);
 end
+%}

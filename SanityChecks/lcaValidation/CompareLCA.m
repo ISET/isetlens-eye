@@ -23,7 +23,7 @@ legendCell = {};
 
 load('chromaticDifferenceOfRefraction_Experimental.mat');
 
-figure(1); clf; hold on; grid on;
+H = vcNewGraphWin(); hold on; grid on;
 title('LCA Comparison');
 xlabel('Wavelength (nm)')
 ylabel('Chromatic difference of refraction (D)')
@@ -31,7 +31,7 @@ axis([400 900 -2.5 1]);
 
 plot(wave,diffRefraction,'b--');
 
-legendCell{end+1} = 'Wald & Griffin';
+legendCell{end+1} = 'Wald & Griffin (1947)';
 
 %% Setup constant parameters
 
@@ -56,14 +56,18 @@ BFL = retinaDistances;
 power = 1./(BFL*10^-3);
 R = -(power - refPower)/vitreousIORat589nm;
 
-figure(1);
 scatter(bestWavelength(2:end-4),R(2:end-4),100,'k*');
 legendCell{end+1} = 'ISETBio (Navarro)';
 
 %% Set plot parameters
 
-fig = figure(1);
+figure(H)
 xlim([400 750])
-set(findall(fig,'-property','FontSize'),'FontSize',20)
-set(findall(fig,'-property','LineWidth'),'LineWidth',3)
+set(findall(H,'-property','FontSize'),'FontSize',20)
+set(findall(H,'-property','LineWidth'),'LineWidth',3)
+set(findall(H,'-property','MarkerSize'),'MarkerSize',3)
 legend(legendCell,'location','best');
+
+%% Save
+fn = fullfile(isetlenseyeRootPath,'outputImages','LCAValidation');
+NicePlot.exportFigToPNG(fn,H,150);

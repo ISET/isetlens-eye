@@ -29,7 +29,7 @@ cloudBucket = 'gs://renderingfrl';
 % cloudBucket = 'gs://primal-surfer-140120.appspot.com';
 
 clusterName = 'pupil';
-zone         = 'us-central1-a';
+zone         = 'us-central1-c';
 instanceType = 'n1-highcpu-32';
 
 gcp = gCloud('dockerAccount',dockerAccount,...
@@ -51,7 +51,7 @@ gcp.targets = [];
 %% Load up the slantedBar scene
 
 % LQ mode flag (for testing)
-lqFlag = true;
+lqFlag = false;
 
 planeDistance = 50;
 scene3d = sceneEye('slantedBar','planeDistance',planeDistance);
@@ -60,7 +60,7 @@ scene3d.fov = 2;
 scene3d.numBounces = 1;
 scene3d.accommodation = 0;
 
-pupilDiameters = [6 5 4 3 2];
+pupilDiameters = [6 5 4 3 2 1];
 
 if(lqFlag) 
     scene3d.resolution = 128;

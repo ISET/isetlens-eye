@@ -25,14 +25,14 @@ end
 tic
 
 dockerAccount= 'tlian';
-projectid = 'renderingfrl';
-dockerImage = 'gcr.io/renderingfrl/pbrt-v3-spectral-gcloud';
-cloudBucket = 'gs://renderingfrl';
-% projectid = 'primal-surfer-140120';
-% dockerImage = 'gcr.io/primal-surfer-140120/pbrt-v2-spectral-gcloud';
-% cloudBucket = 'gs://primal-surfer-140120.appspot.com';
+% projectid = 'renderingfrl';
+% dockerImage = 'gcr.io/renderingfrl/pbrt-v3-spectral-gcloud';
+% cloudBucket = 'gs://renderingfrl';
+projectid = 'primal-surfer-140120';
+dockerImage = 'gcr.io/primal-surfer-140120/pbrt-v2-spectral-gcloud';
+cloudBucket = 'gs://primal-surfer-140120.appspot.com';
 
-clusterName = 'overheadchess';
+clusterName = 'trisha';
 zone         = 'us-central1-b';
 instanceType = 'n1-highcpu-32';
 
@@ -86,15 +86,25 @@ if(lqFlag)
     scene3d.numCABands = 1;
     
 else
-    scene3d.numRays = 4096;
+    % scene3d.numRays = 4096;
+    scene3d.numRays = 1024;
     scene3d.resolution = 800;
-    scene3d.numCABands = 16;
+    scene3d.numCABands = 1;
 end
+
+r = [426   532    41    37];
+cw = rect2cropwindow(r,scene3d.resolution,scene3d.resolution);
+scene3d.recipe = recipeSet(scene3d.recipe,'cropwindow',cw);
+
+oi = scene3d.render;
+ieAddObject(oi);
+oiWindow;
 
 %% Send to cloud
 scene3d.name = 'chessSetOverhead';
 sendToCloud(gcp,scene3d,'uploadZip',true);
 
+%{
 %% Load the second scene
 scene3d = sceneEye('chessSet-2');
 
@@ -139,6 +149,7 @@ scene3d.name = 'chessSetOverhead-2';
 
 [cloudFolder,zipFileName] =  ...
     sendToCloud(gcp,scene3d,'uploadZip',true);
+%}
 
 %% Render
 gcp.render();

@@ -29,15 +29,15 @@ end
 %% Initialize your cluster
 tic
 
+% dockerAccount= 'tlian';
+% projectid = 'renderingfrl';
+% dockerImage = 'gcr.io/renderingfrl/pbrt-v3-spectral-gcloud';
+% cloudBucket = 'gs://renderingfrl';
 dockerAccount= 'tlian';
-projectid = 'renderingfrl';
-dockerImage = 'gcr.io/renderingfrl/pbrt-v3-spectral-gcloud';
-cloudBucket = 'gs://renderingfrl';
-% projectid = 'primal-surfer-140120';
-% dockerImage = 'gcr.io/primal-surfer-140120/pbrt-v2-spectral-gcloud';
-% cloudBucket = 'gs://primal-surfer-140120.appspot.com';
+dockerImage = 'gcr.io/primal-surfer-140120/pbrt-v3-spectral-gcloud';
+cloudBucket = 'gs://primal-surfer-140120.appspot.com';
 
-clusterName = 'validate';
+clusterName = 'chessset';
 zone         = 'us-central1-a';
 instanceType = 'n1-highcpu-32';
 
@@ -47,7 +47,7 @@ gcp = gCloud('dockerAccount',dockerAccount,...
     'cloudBucket',cloudBucket,...
     'zone',zone,...
     'instanceType',instanceType,...
-    'projectid',projectid);
+    'maxInstances',20);
 toc
 
 % Render depth
@@ -72,12 +72,12 @@ myScene.numCABands = 8;
 myScene.diffractionEnabled = false;
 myScene.numBounces = 3;
 
-lqFlag = true;
+lqFlag = false;
 
 %% Loop and upload to cloud
 
-%pupilDiameters = [2 2.5 3 3.5 4 4.5 5 5.5 6];
-pupilDiameters = [2 4 6];
+pupilDiameters = [2.5 3 3.5 4.5 5 5.5];
+%pupilDiameters = [2 4 6];
 
 for ii = 1:length(pupilDiameters)
     

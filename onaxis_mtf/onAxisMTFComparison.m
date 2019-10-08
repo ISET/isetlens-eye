@@ -51,7 +51,7 @@ figure(MTFfig);
 grid on;
 title(sprintf('On-Axis MTF \n (3 mm pupil, polychromatic)'))
 xlabel('Spatial Frequency (cycles/deg)');
-ylabel('Contrast Reduction (SFR)');
+ylabel('Contrast Reduction ');
 xlim([0 100])
 
 ax = get(MTFfig,'CurrentAxes');
@@ -63,10 +63,9 @@ set(MTFfig,'Position',[0.0069    0.2044    0.6356    0.6889]);
 
 legend(h3,'Navarro (ISETBio)',...
     'location','northeast')
-%{
+
 fn = fullfile(saveDir,'mtfFig_1.png');
-NicePlot.exportFigToPNG(fn, MTFfig, 300); 
-%}
+NicePlot.exportFigToPNG(fn, MTFfig, 150); 
     
 %% Load Zemax data
 % The Zemax data has been saved out as a text file. We read in the text
@@ -85,7 +84,7 @@ h4 = plot(data_geometric.spatial_frequency.*mmPerDeg,...
     data_geometric.MTF_tangential,'b:','LineWidth',3);
 
 %% Save intermediate image
-%{
+
 figure(MTFfig);
 
 legend([h3 h4],...
@@ -94,8 +93,8 @@ legend([h3 h4],...
     'location','northeast')
 
 fn = fullfile(saveDir,'mtfFig_2.png');
-NicePlot.exportFigToPNG(fn, MTFfig, 300); 
-%}
+NicePlot.exportFigToPNG(fn, MTFfig, 150); 
+
 %% Compare with Watson's model (2013)
 % Note: I can't tell how Watson calculates his "polychromatic" MTF. The
 % following equation is for a "polychromatic" one. I have always just
@@ -126,7 +125,7 @@ figure(MTFfig); hold on;
 h2 = plot(u,M_Watson,'g','LineWidth',3);
 
 %% Save intermediate image
-%{
+
 figure(MTFfig);
 
 legend([h3 h4 h2],...
@@ -136,8 +135,8 @@ legend([h3 h4 h2],...
     'location','northeast')
 
 fn = fullfile(saveDir,'mtfFig_3.png');
-NicePlot.exportFigToPNG(fn, MTFfig, 300); 
-%}
+NicePlot.exportFigToPNG(fn, MTFfig, 150); 
+
 %% Load and plot Thibos MTF's
 % These MTF's have been precalculated in the script:
 %   generateMTFfromThibos.m
@@ -161,7 +160,7 @@ figure(MTFfig);
 grid on;
 title(sprintf('On-Axis MTF \n (3 mm pupil, polychromatic)'))
 xlabel('Spatial Frequency (cycles/deg)');
-ylabel('Contrast Reduction (SFR)');
+ylabel('Contrast Reduction ');
 
 axis([0 100 0 1])
 % set(ax, 'YScale', 'log')
@@ -179,12 +178,11 @@ set(findall(ax,'-property','LineWidth'),'LineWidth',3)
 % set(gcf,'Position',[0.0070    0.3340    0.4629    0.5597]);
 
 legend([h3 h4 h2 h1],...
-    {'Navarro (ISET3d)',...
+    {'Navarro (ISETBio)',...
     'Navarro (Zemax)',...
     'Watson (2013)',...
     'Thibos (2002)'},'location','northeast')
 
 fn = fullfile(saveDir,'mtfFig.png');
-NicePlot.exportFigToPNG(fn, MTFfig, 300); 
+NicePlot.exportFigToPNG(fn, MTFfig, 150); 
 
-%%

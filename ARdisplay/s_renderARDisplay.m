@@ -30,13 +30,14 @@ end
 saveFlag = true;
 
 % Global rays/resolution 
-globalRays = 64;
-globalRes  = 128;
+globalRays = 1024;
+globalRes  = 512;
+globalBounces = 1;
 
 % Global eye parameters
 accomm    = 1;
 pupilDiam = 4;
-caBands    = 8;
+caBands    = 0;
 fov       = 40;
 
 %% Step 1
@@ -51,21 +52,6 @@ inFile = fullfile(inFolder,sceneName,sceneFileName);
 % Load with sceneEye
 thisEye = sceneEye(inFile);
 
-% Do a quick render to get an idea of what things look like
-% ~1 min on an 8 core machine
-%{
-thisEye.numBounces = 5;
-thisEye.numRays = 64;
-thisEye.resolution = 256;
-thisEye.accommodation = 1;
-thisEye.fov = 40;
-
-thisEye.debugMode = true; % Use a pinhole camera
-thisEye.name = 'testRender';
-[scene,output] = thisEye.render();
-sceneWindow(scene);
-%}
-
 % Set eye parameters
 thisEye.accommodation = accomm; 
 thisEye.pupilDiameter = pupilDiam;
@@ -76,6 +62,10 @@ thisEye.fov = fov;
 thisEye.debugMode = false;
 thisEye.numRays = globalRays;
 thisEye.resolution = globalRes;
+thisEye.numBounces = globalBounces;
+
+% Turn of lens transmission for now
+thisEye.lensDensity = 0.0;
 
 thisEye.name = 'oiRef';
 [oiRef,result] = thisEye.render();
@@ -130,7 +120,7 @@ pinholeCamera.debugMode = true; % Perspective
 pinholeCamera.accommodation = 0; % Is this right?
 pinholeCamera.numCABands = 0;
 
-pinholeCamera.name = 'oiText';
+pinholeCamera.name = 'sceneText';
 [sceneText,result] = pinholeCamera.render();
 sceneWindow(sceneText);
 
@@ -139,9 +129,13 @@ sceneWindow(sceneText);
 % Texture the plane (properly) using the RGB image. These are the photons
 % coming from the display.
 
-% The display we use in PBRT is close to an sRGB display, so this should
-% work, theoretically. I anticipate needing to debug this in the future...
-rgbImage = oiGet(sceneText,'rgb');
+d = displayCreate('LCD-Apple');
+rgb2xyz = displayGet(d,'rgb2xyz');
+xyz2rgb = inv(rgb2xyz);
+xyzImage = sceneGet(sceneText,'xyz');
+lrgbImage = imageLinearTransform(xyzImage,xyz2rgb);
+lrgbImage = mat2gray(lrgbImage);
+rgbImage = lrgbImage.^(1/2.2);
 
 % Write it out
 imageTexturePath = fullfile(saveDir,'rgbImage.png');
@@ -172,6 +166,10 @@ thisEye.fov = fov;
 thisEye.debugMode = false;
 thisEye.numRays = globalRays;
 thisEye.resolution = globalRes;
+thisEye.numBounces = 1; % Display
+
+% Turn off lens transmission for now
+thisEye.lensDensity = 0.0;
 
 % Render
 thisEye.name = 'oiDisplay';
@@ -186,7 +184,7 @@ if(saveFlag)
     formatOut = 'mm_dd_HH_MM';
     timestamp = datestr(now,formatOut);
     fn = fullfile(saveDir,sprintf('Output_%s.mat',timestamp));
-    save(fn,'oiRef','oiDisplay','oiBG','oiText','rgbImage',...
+    save(fn,'oiRef','oiDisplay','oiBG','sceneText','rgbImage',...
         'thisEye');
 end
 
@@ -207,7 +205,12 @@ title(sprintf('Select point on object. Hit ENTER when finished.'));
 [X,Y] = getpts();
 X = round(X); Y = round(Y);
 %}
-X = 119; Y = 181; % For 256x256 resolution
+switch globalRes
+    case 256
+        X = 119; Y = 181; % For 256x256 resolution
+    otherwise
+        error('Did not recognize resolution.')
+end
 
 ptPhotonsDisplay = squeeze(photonsDisplay(Y,X,:));
 ptPhotonsBG = squeeze(photonsBG(Y,X,:));
@@ -216,28 +219,37 @@ ptPhotonsRef = squeeze(photonsRef(Y,X,:));
 
 vcNewGraphWin();
 subplot(1,2,1);
-wave = oiGet(oiARdisplay,'wave');
+wave = oiGet(oiDisplay,'wave');
 plot(wave,ptPhotonsDisplay); hold on;
 plot(wave,ptPhotonsRef);
 plot(wave,ptPhotonsBG);
 xlabel('Wave'); ylabel('Photons')
 legend('Display','Ground Truth','Background');
 
-scalingFactor = (ptPhotonsRef - ptPhotonsBG)./ptPhotonsDisplay;
+ratio = ptPhotonsRef./ptPhotonsDisplay;
 subplot(1,2,2);
-plot(wave,scalingFactor);
+plot(wave,ratio);
 title('Ratio: Ref/Display')
 
-minRatio = min(scalingFactor);
+% Calculating scaling factor using XYZ
+xyzRef = ieXYZFromPhotons(ptPhotonsBG',wave);
+xyzDisp = ieXYZFromPhotons(ptPhotonsDisplay',wave);
+sf = xyzRef./xyzDisp;
+fprintf('Scaling factor = %f %f %f \n',sf);
+sf = sf(2);
+
+xyzDisp = ieXYZFromPhotons(ptPhotonsDisplay'.*sf,wave);
+fprintf('XYZ (Ref) = %f %f %f \n',xyzRef);
+fprintf('XYZ (Disp) = %f %f %f \n',xyzDisp);
+
 vcNewGraphWin();
-plot(wave,ptPhotonsDisplay.*minRatio); hold on;
+plot(wave,ptPhotonsDisplay.*sf); hold on;
 plot(wave,ptPhotonsRef);
 xlabel('Wave'); ylabel('Photons')
 legend('Display (scaled)','Ground Truth');
 
-testRatio = max(scalingFactor);
 % Sum up, but with scaling
-photonsTotal = photonsDisplay.*testRatio + photonsBG;
+photonsTotal = photonsDisplay.*sf + photonsBG;
 
 oiARdisplay = oiBG; % Make a copy
 oiARdisplay = oiSet(oiARdisplay,'photons',photonsTotal); % Set photons
@@ -246,6 +258,7 @@ oiARdisplay = oiSet(oiARdisplay,'name','oiARdisplay');
 oiWindow(oiARdisplay);
 
 %% Plot background vs text photons
+%{
 % Debugging
 % Background is actually lighter than the object (text). There no way an
 % addition of photons will result in something similar in luminance to the
@@ -255,8 +268,14 @@ rgb = oiGet(oiRef,'rgb');
 vcNewGraphWin();
 imshow(rgb.^(0.5)); 
 % [X, Y] = getpts();
-textPt = [118 167]; % for 256 res
-sofaPt = [122 168]; % for 256 res
+
+switch globalRes
+    case 256
+        textPt = [118 167]; % for 256 res
+        sofaPt = [122 168]; % for 256 res
+    otherwise
+        error('Did not recognize resolution.')
+end
 
 % Check color
 textRGB = rgb(textPt(2),textPt(1),:).^(0.5);
@@ -279,7 +298,7 @@ legend('Text (object)','Sofa (background)')
 grid on;
 xlabel('Wavelength (nm)');
 ylabel('Photons');
-
+%}
 
 
 

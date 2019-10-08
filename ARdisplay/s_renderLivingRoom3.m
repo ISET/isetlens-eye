@@ -15,8 +15,8 @@
 % TL 2019
 
 %% Initialize
-ieInit;
-clear; close all;
+% ieInit;
+% clear; close all;
 
 if ~piDockerExists, piDockerConfig; end
 if isempty(which('RdtClient'))
@@ -25,8 +25,10 @@ end
 
 %% Read the pbrt files
 
-sceneName = 'living-room-3'; sceneFileName = 'living-room-3.pbrt';
+sceneName = 'living-room-3-mini'; sceneFileName = 'living-room-3.pbrt';
+% sceneName = 'living-room-3'; sceneFileName = 'living-room-3.pbrt';
 
+%{
 % The output directory will be written here to inFolder/sceneName
 inFolder = fullfile(piRootPath,'local','scenes');
 
@@ -39,21 +41,27 @@ end
 
 % This is the PBRT scene file inside the output directory
 inFile = fullfile(inFolder,sceneName,sceneFileName);
+%}
+
+% Read the scene into a ISET3d recipe
+inFolder = fullfile(isetlenseyeRootPath,'ARdisplay');
+inFile = fullfile(inFolder,sceneName,'PBRT',sceneFileName);
+
 thisR  = piRead(inFile);
 
 %% Set quality
 
-thisR.set('film resolution',round([640 360]*0.5));  
-thisR.set('pixel samples',64);  
-thisR.set('bounces',5);
-
-% Cropped render of vases on table top
-%r = [0.4281    0.5375    0.6000    0.8167];
-%thisR.set('cropwindow',r);
+thisR.set('film resolution',round([640 360]*0.2));  
+thisR.set('pixel samples',32);  
+thisR.set('bounces',0);
 
 % Cropped render of the corner of the carpet
-%r = [0.6 0.75 0.75 1];
-%thisR.set('cropwindow',r);
+% r = [0.6625    0.7375    0.7389    0.8611];
+% thisR.set('cropwindow',r);
+
+% Temp
+% r = [0.3719    0.4188    0.5556    0.6278];
+% thisR.set('cropwindow',r);
 
 %% Set output
 
@@ -66,9 +74,17 @@ piWrite(thisR);
 
 %% Render
 
-[scene, result] = piRender(thisR);
-sceneWindow(scene);
-
+[coordMap, result] = piRender(thisR,'renderType','coordinates');
 vcNewGraphWin();
-depthMap = sceneGet(scene,'depth map');
-imagesc(depthMap);
+subplot(1,3,1); imagesc(coordMap(:,:,1)); axis image; colorbar; title('x-axis')
+subplot(1,3,2); imagesc(coordMap(:,:,2)); axis image; colorbar; title('y-axis')
+subplot(1,3,3); imagesc(coordMap(:,:,3)); axis image; colorbar; title('z-axis')
+
+% [scene, result] = piRender(thisR);
+% sceneWindow(scene);
+%  
+% vcNewGraphWin();
+% depthMap = sceneGet(scene,'depth map');
+% imagesc(depthMap);
+% colorbar;
+

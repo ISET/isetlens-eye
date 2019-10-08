@@ -24,7 +24,7 @@ tic
 dockerAccount= 'tlian';
 dockerImage = 'gcr.io/primal-surfer-140120/pbrt-v3-spectral-gcloud';
 cloudBucket = 'gs://primal-surfer-140120.appspot.com';
-clusterName = 'trisha-va';
+clusterName = 'trisha';
 zone         = 'us-central1-b'; %'us-west1-a';    
 instanceType = 'n1-highcpu-32';
 gcp = gCloud('dockerAccount',dockerAccount,...
@@ -46,8 +46,8 @@ gcp.targets = [];
 myScene = sceneEye('chessSet');
 
 %% Change the environment map
-myScene.recipe = piWorldFindAndReplace(myScene.recipe,...
-    'noon_009.exr','skylight-day.exr');
+% myScene.recipe = piWorldFindAndReplace(myScene.recipe,...
+%     'noon_009.exr','skylight-day.exr');
 
 %% Set parameters
 
